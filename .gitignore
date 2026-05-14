@@ -1,0 +1,12 @@
+# Binaries
+*.exe
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Claude / Phanes runtime artifacts
+.claude/
+.phanes/
