@@ -20,7 +20,7 @@ It is not a tool you install once and forget. It is a *re-runnable specification
 - [Core principles enforced by Phanes](#core-principles-enforced-by-phanes)
 - [For inexperienced users: step-by-step from zero](#for-inexperienced-users-step-by-step-from-zero)
 - [How to install](#how-to-install)
-- [Migrating an older install (⚠️ experimental)](#migrating-an-older-install--experimental)
+- [Migrating an older install (⚠️ experimental)](#migrating-an-older-install-experimental)
 - [Version](#version) · [License](#license) · [Contributing](#contributing)
 
 ---
@@ -52,7 +52,7 @@ When you run `/phanes` in a repo for the first time, the prompt drives Claude Co
 
 > **After the first run: restart your Claude Code session.** Hook configuration is snapshotted at session start, so the enforcement hooks arm on the *next* session. Phanes reminds you of this verbatim at the end of the run.
 
-Re-runs detect the existing install via the `.claude/.phanes` marker and upgrade in place: agents, workflows, scripts, hooks, and READMEs are evaluated against the latest version of `phanes.md` and refreshed where they have drifted. Installations created by v1 are detected and routed to the experimental updater (see [Migrating an older install](#migrating-an-older-install--experimental)).
+Re-runs detect the existing install via the `.claude/.phanes` marker and upgrade in place: agents, workflows, scripts, hooks, and READMEs are evaluated against the latest version of `phanes.md` and refreshed where they have drifted. Installations created by v1 are detected and routed to the experimental updater (see [Migrating an older install](#migrating-an-older-install-experimental)).
 
 ## How to use
 
@@ -192,7 +192,26 @@ Optional arguments are forwarded through `$ARGUMENTS` and prioritized over the d
 
 The first run takes several minutes, will pause to confirm a few choices (module boundaries, hook install), and ends by asking you to restart the session so the enforcement hooks arm. Subsequent runs are faster; only diffs are written.
 
-### Migrating an older install (⚠️ EXPERIMENTAL)
+### What gets created on first run
+
+```
+documentation/        # session summaries, plans, snapshots, registries; every folder indexed by a generated _index.md
+tests/                # unit, integration, e2e, fixtures, helpers
+.phanes/              # scripts (new-file, regen-registry, api-diff, loc-check, doc-check, doc-index, hook-*) and config
+.claude/agents/       # generated sub-agent definitions (6-10, deeply scoped)
+.claude/workflows/    # codified multi-agent workflows (YAML, the single source of truth for chaining)
+.claude/settings.json # merged hook entries: hook-stamp-guard (blocking) + hook-size-check (advisory)
+.claude/template/     # report.md template used by every sub-agent
+.claude/.phanes       # run counter & install-state marker (hidden)
+CLAUDE.md             # root: primary-agent mandates; module roots: folder-specific guidance
+CLAUDE.local.md       # live register of projects in motion (gitignored by convention)
+```
+
+`.claude/`, `.phanes/`, and other runtime artifacts are excluded by the default `.gitignore` shipped with this repo. Adjust to taste in your own project.
+
+---
+
+## Migrating an older install (EXPERIMENTAL)
 
 > ⚠️ **PhanesUpdate is experimental. It has not been validated against real-world installations; treat a migration as effectively irreversible once the migration branch is merged.** Before running it: commit or stash everything, push your repository to a remote (or take a full copy of the project folder), and proceed only on a project you can restore from that backup. The prompt refuses to start until you acknowledge this.
 
@@ -214,23 +233,6 @@ Invoke-WebRequest `
 ```
 
 Then **back up your project**, open it, and run `/phanesupdate`. It self-updates your `/phanes` command from this repository, fingerprints the installed version, and migrates the structure on a dedicated branch behind a generated, evidence-verified checklist, preserving your accumulated knowledge (tier 2 annotations, session summaries, snapshots) byte-for-byte. Superseded artifacts are archived, never deleted. You review and merge the branch yourself: **verify it thoroughly before merging, because the merge is the point of no return**.
-
-### What gets created on first run
-
-```
-documentation/        # session summaries, plans, snapshots, registries; every folder indexed by a generated _index.md
-tests/                # unit, integration, e2e, fixtures, helpers
-.phanes/              # scripts (new-file, regen-registry, api-diff, loc-check, doc-check, doc-index, hook-*) and config
-.claude/agents/       # generated sub-agent definitions (6-10, deeply scoped)
-.claude/workflows/    # codified multi-agent workflows (YAML, the single source of truth for chaining)
-.claude/settings.json # merged hook entries: hook-stamp-guard (blocking) + hook-size-check (advisory)
-.claude/template/     # report.md template used by every sub-agent
-.claude/.phanes       # run counter & install-state marker (hidden)
-CLAUDE.md             # root: primary-agent mandates; module roots: folder-specific guidance
-CLAUDE.local.md       # live register of projects in motion (gitignored by convention)
-```
-
-`.claude/`, `.phanes/`, and other runtime artifacts are excluded by the default `.gitignore` shipped with this repo. Adjust to taste in your own project.
 
 ---
 
