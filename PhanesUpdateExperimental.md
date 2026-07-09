@@ -1,6 +1,6 @@
 <!-- PhanesUpdateExperimental v1.0 — 2026-07-10 — EXPERIMENTAL migration prompt for existing Phanes installations.
      Migrates: any pre-v2.0 Phanes install → the latest phanes.md published at github.com/Aloim/phanes.
-     Companion to phanes.md (PhanesLight). Run ONCE per version jump; same-version refreshes are /phanes update runs. -->
+     Companion to phanes.md. Run ONCE per version jump; same-version refreshes are /phanes update runs. -->
 
 # PhanesUpdate (EXPERIMENTAL)
 
