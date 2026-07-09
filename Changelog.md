@@ -9,6 +9,9 @@ All notable changes to **Phanes** (PhanesLight edition). The authoritative versi
 ### Changed
 - `PhanesUpdate.md` renamed **`PhanesUpdateExperimental.md`** — the migration prompt has not been validated against real-world installations. Warnings added throughout: the prompt itself now refuses to run until the user confirms an external backup (remote push or full project copy) and explicitly acknowledges the risk; the README and `phanes.md`'s migration pointer carry the same warning. Treat a migration as **effectively irreversible** once the migration branch is merged.
 
+### Added
+- README: table of contents with section links, and a **How to use** section covering first-run guidance (seed an empty repo with a `plan.md`; steer the setup with directives after the command; restart afterward) and re-run cadence (small project: freely, several times a day; before implementation plans: run and inject the plan; session bookends; large project: once or twice a day). Plus a full copyediting pass for plain readability.
+
 ---
 
 ## v2.0.1 — 2026-07-10
