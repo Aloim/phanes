@@ -11,7 +11,7 @@ It is not a tool you install once and forget — it is a *re-runnable specificat
 | Your situation | Use |
 | --- | --- |
 | Fresh project, or a project with **no** Phanes yet | **`phanes.md`** → `/phanes` — full bootstrap. Re-running it also keeps a current-version install upgraded in place. |
-| Project already carrying an **older** Phanes (e.g., a v1 install) | **`PhanesUpdate.md`** → `/phanesupdate` *(in preparation — tracked in the [change log](documentation/session-summaries/SS00001_phaneslight-v2-rewrite_2026-07-09.md))* — version migration. It first refreshes your installed `/phanes` command from this repository so you migrate onto the newest spec, then upgrades the project's entire Phanes structure — agents, scripts, hooks, workflows, documentation tree — behind a strict, generated, per-item-verified checklist. Accumulated knowledge (session summaries, tier 2 annotations, snapshots) is preserved and indexed, never rewritten. |
+| Project already carrying an **older** Phanes (e.g., a v1 install) | **`PhanesUpdate.md`** → `/phanesupdate` — version migration. It first refreshes your installed `/phanes` command from this repository so you migrate onto the newest spec, then upgrades the project's entire Phanes structure — agents, scripts, hooks, workflows, documentation tree — behind a strict, generated, per-item-verified checklist. Accumulated knowledge (session summaries, tier 2 annotations, snapshots) is preserved and indexed, never rewritten. |
 
 ---
 
@@ -51,6 +51,56 @@ Re-runs detect the existing install via the `.claude/.phanes` marker and upgrade
 - **No direct code modification by sub-agents — at any tier.** Coding agents emit a report containing a proposed diff; a Critic reviews it; the Executor applies it. Review depth scales with tier; its presence is never waived. The primary Claude Code agent does not edit code directly either — it orchestrates.
 - **Context injection over context inheritance.** Sub-agents receive only the slice of context their tier permits — and pull bulky material through read-only scout digests instead of loading it raw. Pollution from sibling tasks is structurally impossible.
 - **Index-first documentation navigation.** No agent bulk-reads `documentation/` — indexes are descended, targets loaded, nothing else.
+
+---
+
+## For inexperienced users: step-by-step from zero
+
+Never used Claude before? This takes you from no account to a running Phanes install. Experienced Claude Code users can skip straight to "How to install" below.
+
+### Step 1 — Create a Claude account
+
+Go to [claude.ai](https://claude.ai) and sign up (email or Google account).
+
+### Step 2 — Get a plan that can carry Phanes
+
+Phanes is a multi-agent system: a single task can run chains of several Claude instances (planner, coder, critic, executor, monitor), and each consumes usage. **The Pro plan will not suffice** — its limits are exhausted after a few chains. You need one of:
+
+- **Claude Max 5x** — the workable entry point for lighter projects.
+- **Claude Max 20x** *(recommended)* — comfortable headroom for real multi-agent work. Subscribe under Settings → Plan at claude.ai.
+- **Claude API (pay per token)** — create an account at [console.anthropic.com](https://console.anthropic.com), add credits, and be aware that multi-agent orchestration uses substantially more tokens than single-chat usage; costs scale with how hard you drive it.
+
+(Check current pricing on the official pages — plans and limits change.)
+
+### Step 3 — Install Claude Code
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+(Alternative: `npm install -g @anthropic-ai/claude-code` if you already use Node.js 18+.) Also make sure `git` is installed — [git-scm.com](https://git-scm.com) — Phanes requires it.
+
+Verify with:
+
+```
+claude --version
+```
+
+### Step 4 — Sign in
+
+Open a terminal in any project folder, run `claude`, and follow the login prompt (or type `/login`): choose **Claude account** if you subscribed to Max, or **Anthropic Console** if you're paying per token via the API.
+
+### Step 5 — Install Phanes
+
+Continue with "How to install" directly below — it's two commands.
 
 ---
 
@@ -112,6 +162,27 @@ Optional arguments are forwarded through `$ARGUMENTS` and prioritized over the d
 
 The first run takes several minutes, will pause to confirm a few choices (module boundaries, hook install), and ends by asking you to restart the session so the enforcement hooks arm. Subsequent runs are faster — only diffs are written.
 
+### Migrating an older install
+
+If a project already carries a pre-v2.0 Phanes installation, install the updater alongside `/phanes`:
+
+**Linux / macOS:**
+
+```bash
+curl -L https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdate.md \
+  -o ~/.claude/commands/phanesupdate.md
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Invoke-WebRequest `
+  -Uri https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdate.md `
+  -OutFile "$env:USERPROFILE\.claude\commands\phanesupdate.md"
+```
+
+Then open the project and run `/phanesupdate`. It self-updates your `/phanes` command from this repository, fingerprints the installed version, migrates the structure on a dedicated branch behind a generated, evidence-verified checklist — and preserves your accumulated knowledge (tier 2 annotations, session summaries, snapshots) byte-for-byte. Superseded artifacts are archived, never deleted; you review and merge the branch yourself.
+
 ### What gets created on first run
 
 ```
@@ -133,7 +204,7 @@ CLAUDE.local.md       # live register of projects in motion (gitignored by conve
 
 ## Version
 
-Current: **v2.0** (2026-07-09) — see the version stamp at the top of `phanes.md`. The complete V1→V2 change log lives in [`documentation/session-summaries/SS00001_phaneslight-v2-rewrite_2026-07-09.md`](documentation/session-summaries/SS00001_phaneslight-v2-rewrite_2026-07-09.md).
+Current: **v2.0.1** (2026-07-10) — see the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
 
 ---
 
