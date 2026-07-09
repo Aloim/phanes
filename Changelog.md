@@ -4,6 +4,13 @@ All notable changes to **Phanes** (PhanesLight edition). The authoritative versi
 
 ---
 
+## v2.0.2 — 2026-07-10
+
+### Changed
+- `PhanesUpdate.md` renamed **`PhanesUpdateExperimental.md`** — the migration prompt has not been validated against real-world installations. Warnings added throughout: the prompt itself now refuses to run until the user confirms an external backup (remote push or full project copy) and explicitly acknowledges the risk; the README and `phanes.md`'s migration pointer carry the same warning. Treat a migration as **effectively irreversible** once the migration branch is merged.
+
+---
+
 ## v2.0.1 — 2026-07-10
 
 ### Added

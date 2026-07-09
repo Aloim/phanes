@@ -1,4 +1,4 @@
-<!-- PhanesLight v2.0.1 — 2026-07-10 — single-file bootstrap edition of Phanes.
+<!-- PhanesLight v2.0.2 — 2026-07-10 — single-file bootstrap edition of Phanes.
      Installed copies: diff this version stamp against upstream before an update run.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
@@ -177,7 +177,7 @@ IMPORTANT: **YOU MUST** not skip any steps. Follow all steps and infer best prac
 
    * You **MUST** explicitly inform the user: "Existing sub-agent definitions detected. I will now re-evaluate and update all existing agents, and create any new ones, based *only* on the current core project context and the latest instructions in this prompt. This ensures your AI team is continuously enhanced and optimized while focusing exclusively on the project's actual purpose."
    * You **MUST** then proceed with the full flow.
-   * **Legacy migration:** If the existing installation was created by an earlier Phanes version (no version stamp anywhere; agents referencing `sequential-thinking` or an MCP `memory` server; mandatory-Serena protocols; per-subfolder CLAUDE.md sprawl; a second `Executor` archetype), **STOP and direct the user to run `/phanesupdate` first** (`PhanesUpdate.md`, published alongside this file) — it migrates the structure behind a generated, evidence-verified checklist while preserving all accumulated knowledge, then hands back to `/phanes` for regeneration. Do **not** improvise a partial migration inside a normal update run. *Exception:* when this update run was itself invoked **by** PhanesUpdate as its regeneration hand-off, proceed — scoped by the migration manifest.
+   * **Legacy migration:** If the existing installation was created by an earlier Phanes version (no version stamp anywhere; agents referencing `sequential-thinking` or an MCP `memory` server; mandatory-Serena protocols; per-subfolder CLAUDE.md sprawl; a second `Executor` archetype), **STOP and direct the user to run `/phanesupdate` first** (`PhanesUpdateExperimental.md`, published alongside this file — **EXPERIMENTAL: the user must have a full backup or remote push before running it, and must treat the migration as effectively irreversible once its branch is merged**) — it migrates the structure behind a generated, evidence-verified checklist while preserving all accumulated knowledge, then hands back to `/phanes` for regeneration. Do **not** improvise a partial migration inside a normal update run. *Exception:* when this update run was itself invoked **by** PhanesUpdate as its regeneration hand-off, proceed — scoped by the migration manifest.
 
 #### Pre-flight Check: Model Context Protocol (MCP) Servers (Applies to all runs)
 

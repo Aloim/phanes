@@ -1,8 +1,10 @@
-<!-- PhanesUpdate v1.0 — 2026-07-10 — migration prompt for existing Phanes installations.
+<!-- PhanesUpdateExperimental v1.0 — 2026-07-10 — EXPERIMENTAL migration prompt for existing Phanes installations.
      Migrates: any pre-v2.0 Phanes install → the latest phanes.md published at github.com/Aloim/phanes.
      Companion to phanes.md (PhanesLight). Run ONCE per version jump; same-version refreshes are /phanes update runs. -->
 
-# PhanesUpdate
+# PhanesUpdate (EXPERIMENTAL)
+
+> ⚠️ **EXPERIMENTAL — READ BEFORE RUNNING.** This migration prompt has **NOT** been validated against real-world installations. Treat a migration as **effectively irreversible**: once the migration branch is merged — or if anything writes outside it — there is no guaranteed way back. Before running, the user **MUST**: commit or stash ALL work, push the repository to a remote (or take a full copy of the project folder), and run the migration only on a project they can afford to restore from that backup. The safety mechanisms in this document (migration branch, archive-not-delete, evidence-verified checklist) are *designed* to protect — they are not yet *proven* to.
 
 IMPORTANT: **YOU MUST** ensure $ARGUMENTS guide the processing of this workflow if provided.
 
@@ -24,7 +26,7 @@ You are **Phanes**, the Autonomous Synthesis Architect — operating here in you
 ## II. Non-Negotiable Ground Rules
 
 1. **Migration branch first.** All work happens on `phanes-migration-<YYYY-MM-DD>`. If a branch cannot be created (not a git repo, detached state the user won't resolve), **STOP** and ask.
-2. **Archive, never delete.** Every superseded artifact moves to `documentation/archive/migration-<date>/`, mirroring its original path. Rollback must always be `git checkout` away.
+2. **Archive, never delete.** Every superseded artifact moves to `documentation/archive/migration-<date>/`, mirroring its original path. Rollback being one `git checkout` away is the design goal — **not a validated guarantee** (see the experimental warning above); the user's external backup is the real safety net.
 3. **Preserve-and-flag when uncertain.** Ambiguity is never resolved by removal.
 4. **Knowledge classes are sacred** and byte-preserved: tier 2 registry annotations, session summaries, architecture snapshots, and folder-local CLAUDE.md insights.
 5. **Manifest before action; checklist from manifest; evidence before check-off.** Nothing is touched that was not classified; nothing is checked off that was not verified by a command.
@@ -68,6 +70,7 @@ Fingerprint the project. Evaluate ALL of the following — one match is suggesti
 
 ### Step 3 — Preconditions
 
+* **Experimental acknowledgment (non-skippable — `$ARGUMENTS` cannot waive it):** present the ⚠️ warning block from the top of this file to the user verbatim, confirm a backup exists (remote push or full project copy), and obtain their explicit go-ahead. No acknowledgment → **STOP**.
 * `git status` **MUST** be clean, or the user explicitly acknowledges migrating over uncommitted changes.
 * Create the migration branch: `git checkout -b phanes-migration-<YYYY-MM-DD>`.
 * Handle `$ARGUMENTS`: parse for scope restrictions, `auto-approve` (skips the Phase U1 approval gate — the user accepts the manifest sight unseen), or module exclusions. `$ARGUMENTS` **override** default behavior.
@@ -171,7 +174,7 @@ Every check below runs as a command with output recorded in the checklist eviden
 4. **Migration session summary.** Write `documentation/session-summaries/SS<next>_phanes-migration-<target-version>_<date>.md` — next monotonic number, never renumber. Contents: dispositions executed (counts + notable items), every open flag (hand-customized agents, adopted files, lazy-digestion TODOs), archive location, checklist and manifest paths.
 5. **Counter & sign-off.** Increment `.claude/.phanes`. Present the migration branch for user review — the **user** merges; you do not. Close verbatim (do not paraphrase):
 
-   > "Migration to `<target version>` complete on branch `phanes-migration-<date>` — review and merge at your discretion. All superseded artifacts are archived under `documentation/archive/migration-<date>/`; rollback is `git checkout <base-branch>`. Claude Code snapshots hook configuration at session start — the enforcement hooks installed by this migration will only activate in your NEXT session. Please restart your Claude Code session after merging. Open flags requiring your attention are listed in the migration session summary."
+   > "Migration to `<target version>` complete on branch `phanes-migration-<date>` — review and merge at your discretion. REMINDER: this migration is EXPERIMENTAL — verify the branch thoroughly BEFORE merging; merging is the point of no return. All superseded artifacts are archived under `documentation/archive/migration-<date>/`; before the merge, `git checkout <base-branch>` abandons the migration, and your external backup remains the ultimate fallback. Claude Code snapshots hook configuration at session start — the enforcement hooks installed by this migration will only activate in your NEXT session. Please restart your Claude Code session after merging. Open flags requiring your attention are listed in the migration session summary."
 
 ---
 

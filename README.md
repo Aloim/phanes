@@ -11,7 +11,7 @@ It is not a tool you install once and forget — it is a *re-runnable specificat
 | Your situation | Use |
 | --- | --- |
 | Fresh project, or a project with **no** Phanes yet | **`phanes.md`** → `/phanes` — full bootstrap. Re-running it also keeps a current-version install upgraded in place. |
-| Project already carrying an **older** Phanes (e.g., a v1 install) | **`PhanesUpdate.md`** → `/phanesupdate` — version migration. It first refreshes your installed `/phanes` command from this repository so you migrate onto the newest spec, then upgrades the project's entire Phanes structure — agents, scripts, hooks, workflows, documentation tree — behind a strict, generated, per-item-verified checklist. Accumulated knowledge (session summaries, tier 2 annotations, snapshots) is preserved and indexed, never rewritten. |
+| Project already carrying an **older** Phanes (e.g., a v1 install) | **`PhanesUpdateExperimental.md`** → `/phanesupdate` — version migration. ⚠️ **EXPERIMENTAL, and effectively irreversible once the migration branch is merged — full backup mandatory (see "Migrating an older install" below).** It first refreshes your installed `/phanes` command from this repository so you migrate onto the newest spec, then upgrades the project's entire Phanes structure — agents, scripts, hooks, workflows, documentation tree — behind a strict, generated, per-item-verified checklist. Accumulated knowledge (session summaries, tier 2 annotations, snapshots) is preserved and indexed, never rewritten. |
 
 ---
 
@@ -162,14 +162,16 @@ Optional arguments are forwarded through `$ARGUMENTS` and prioritized over the d
 
 The first run takes several minutes, will pause to confirm a few choices (module boundaries, hook install), and ends by asking you to restart the session so the enforcement hooks arm. Subsequent runs are faster — only diffs are written.
 
-### Migrating an older install
+### Migrating an older install (⚠️ EXPERIMENTAL)
+
+> ⚠️ **PhanesUpdate is experimental — it has not been validated against real-world installations. Treat a migration as effectively irreversible once the migration branch is merged.** Before running it: commit or stash everything, push your repository to a remote (or take a full copy of the project folder), and proceed only on a project you can restore from that backup. The prompt refuses to start until you acknowledge this.
 
 If a project already carries a pre-v2.0 Phanes installation, install the updater alongside `/phanes`:
 
 **Linux / macOS:**
 
 ```bash
-curl -L https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdate.md \
+curl -L https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdateExperimental.md \
   -o ~/.claude/commands/phanesupdate.md
 ```
 
@@ -177,11 +179,11 @@ curl -L https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdate.md \
 
 ```powershell
 Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdate.md `
+  -Uri https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdateExperimental.md `
   -OutFile "$env:USERPROFILE\.claude\commands\phanesupdate.md"
 ```
 
-Then open the project and run `/phanesupdate`. It self-updates your `/phanes` command from this repository, fingerprints the installed version, migrates the structure on a dedicated branch behind a generated, evidence-verified checklist — and preserves your accumulated knowledge (tier 2 annotations, session summaries, snapshots) byte-for-byte. Superseded artifacts are archived, never deleted; you review and merge the branch yourself.
+Then **back up your project**, open it, and run `/phanesupdate`. It self-updates your `/phanes` command from this repository, fingerprints the installed version, migrates the structure on a dedicated branch behind a generated, evidence-verified checklist — and preserves your accumulated knowledge (tier 2 annotations, session summaries, snapshots) byte-for-byte. Superseded artifacts are archived, never deleted; you review and merge the branch yourself — **verify the branch thoroughly before merging; the merge is the point of no return**.
 
 ### What gets created on first run
 
@@ -204,7 +206,7 @@ CLAUDE.local.md       # live register of projects in motion (gitignored by conve
 
 ## Version
 
-Current: **v2.0.1** (2026-07-10) — see the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
+Current: **v2.0.2** (2026-07-10) — see the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
 
 ---
 
