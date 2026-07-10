@@ -731,8 +731,8 @@ You **MUST** select each agent's `model` and thinking directive based on task co
 | Model | Assign to | Rationale |
 |-------|-----------|-----------|
 | `haiku` (Haiku 4.5) | Scouts, retrieval, formatting, indexing, mechanical transforms that a script or test suite guards | Cheapest and fastest; ideal where correctness is externally verified. **Not** the default for authored code — its higher defect rate turns the Critic into an iteration engine, and each Reflect loop (re-work + re-review) costs more than writing it correctly once. |
-| `sonnet` (Sonnet 5) | **DEFAULT** for all coding agents, Analyzers, Validators, Optimizers, and standard Critics | Best accuracy-per-token for implementation and review work. |
-| `opus` (Opus 4.8) | Architect/designer, Synthesizer/Arbiter, final Critic on T3 chains, high-ambiguity planning | Reserve the most capable model for the judgments everything else depends on. |
+| `sonnet` (Sonnet 5) | **DEFAULT** for all coding agents, Analyzers, Validators, and Optimizers | Best accuracy-per-token for implementation and analysis work. |
+| `opus` (Opus 4.8) | Architect/designer, Synthesizer/Arbiter, **all Critics (every tier)**, high-ambiguity planning | Reserve the most capable model for the judgments everything else depends on — the Critic is the terminal quality gate on every chain, and a missed defect costs more than the review. |
 
 **Thinking directives (native — the sequential-thinking MCP is removed):** escalate `think` → `think hard` → `ultrathink` with the logical depth of the skill or task. Embed a distinct directive per skill/task in every agent definition (see template). Scouts get none — they retrieve, they do not deliberate. Architect and Synthesizer default to `think hard`, escalating to `ultrathink` for cross-module design.
 
