@@ -4,6 +4,13 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.1.1 — 2026-07-10
+
+### Changed
+- **Model rubric: every Critic now runs on Opus** (was: Sonnet for standard Critics, Opus only for the final T3 Critic). The Critic is the terminal quality gate on every chain — a missed defect costs more than the review.
+
+---
+
 ## v2.1 — 2026-07-10
 
 ### Added

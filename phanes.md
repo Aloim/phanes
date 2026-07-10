@@ -1,4 +1,4 @@
-<!-- Phanes v2.1 — 2026-07-10 — single-file bootstrap prompt.
+<!-- Phanes v2.1.1 — 2026-07-10 — single-file bootstrap prompt.
      Installed copies: diff this version stamp against upstream before an update run.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
