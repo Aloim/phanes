@@ -13,6 +13,7 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 - Unified to plain **Phanes** across all published files; edition naming removed from the version stamps, README, and this changelog's header.
 
 ### Added
+- README: **Companion tools** section referencing [Charon](https://github.com/Aloim/charon), the standalone dead-code and duplicate-code audit prompt that cooperates with Phanes-managed projects.
 - README: table of contents with section links, and a **How to use** section covering first-run guidance (seed an empty repo with a `plan.md`; steer the setup with directives after the command; restart afterward) and re-run cadence (small project: freely, several times a day; before implementation plans: run and inject the plan; session bookends; large project: once or twice a day). Plus a full copyediting pass for plain readability.
 
 ---

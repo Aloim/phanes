@@ -21,6 +21,7 @@ It is not a tool you install once and forget. It is a *re-runnable specification
 - [For inexperienced users: step-by-step from zero](#for-inexperienced-users-step-by-step-from-zero)
 - [How to install](#how-to-install)
 - [Migrating an older install (⚠️ experimental)](#migrating-an-older-install-experimental)
+- [Companion tools](#companion-tools)
 - [Version](#version) · [License](#license) · [Contributing](#contributing)
 
 ---
@@ -233,6 +234,12 @@ Invoke-WebRequest `
 ```
 
 Then **back up your project**, open it, and run `/phanesupdate`. It self-updates your `/phanes` command from this repository, fingerprints the installed version, and migrates the structure on a dedicated branch behind a generated, evidence-verified checklist, preserving your accumulated knowledge (tier 2 annotations, session summaries, snapshots) byte-for-byte. Superseded artifacts are archived, never deleted. You review and merge the branch yourself: **verify it thoroughly before merging, because the merge is the point of no return**.
+
+---
+
+## Companion tools
+
+- **[Charon](https://github.com/Aloim/charon)** finds dead code, unused files, unused dependencies, and duplicated code, then writes an evidence-backed audit report without touching anything. It is a standalone `/charon` command that works in any repository; in a Phanes-managed project it additionally cooperates with the structures Phanes builds: the report is filed into the documentation tree, open items land in the session summary, and dead exported APIs are proposed as registry annotations so the agent team stops routing new work onto them. Recommended before large refactors and after big migrations, since stale code is context poison for agents.
 
 ---
 
