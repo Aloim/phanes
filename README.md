@@ -30,7 +30,7 @@ It is not a tool you install once and forget. It is a *re-runnable specification
 
 When you run `/phanes` in a repo for the first time, the prompt drives Claude Code through a strict, multi-phase setup:
 
-1. **Pre-flight.** Installs the MCP servers it benefits from: `context7`, and (on the first run) `serena` via `uv`, which it also installs if missing. These are enhancements, not hard dependencies; a failed install is logged as a TODO and the run continues degraded rather than halting. Platform is detected first: bash on POSIX, PowerShell on Windows.
+1. **Pre-flight.** Installs the three MCP servers it benefits from: `context7` (live library documentation on demand), `deepwiki` (digest answers about external GitHub dependencies, so agents never pull dependency source into context), and, on the first run, `serena` (symbol-level code navigation) via `uv`, which it also installs if missing. These are enhancements, not hard dependencies; a failed install is logged as a TODO and the run continues degraded rather than halting. Exactly three, deliberately: MCP tool schemas cost context every session, so every generated agent carries a usage rubric stating when each server saves tokens and when to make no MCP call at all. Platform is detected first: bash on POSIX, PowerShell on Windows.
 2. **Repository comprehension.** Reads the README, source tree, configs, and CI to infer the project's *true* purpose, primary language, build system, and module boundaries. Extraneous directories (vendored deps, example packs, demo content) are filtered out.
 3. **Project memory infrastructure.** Scaffolds the substrate every sub-agent operates against:
    - `documentation/`: session summaries, plans, dated architecture snapshots, and a two-tier API registry (tier 1 generated, tier 2 curated annotations). Every folder carries a **generated `_index.md`**, so agents locate knowledge by descending indexes (a few hundred tokens) instead of scanning trees. Files respect a 500-line soft ceiling and are split-with-index when they outgrow it.
@@ -245,7 +245,7 @@ Then **back up your project**, open it, and run `/phanesupdate`. It self-updates
 
 ## Version
 
-Current: **v2.0.2** (2026-07-10). See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
+Current: **v2.1** (2026-07-10). See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
 
 ---
 

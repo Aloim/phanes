@@ -4,6 +4,16 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.1 — 2026-07-10
+
+### Added
+- **DeepWiki MCP** joins the pre-flight (hosted service, HTTP transport, three tools): agents ask focused questions about external GitHub dependencies and consume digest answers instead of pulling dependency source into context. Graceful degradation like the other servers.
+- **MCP Usage Rubric** embedded in every generated agent: when Serena, context7, and DeepWiki actually save tokens, and when to make no MCP call at all (default: a targeted read under ~2,000 tokens beats any MCP call). DeepWiki is never used for the project's own code — the registry and documentation tree own that.
+- **Pre-flight token-discipline note**: MCP tool schemas cost context every session (~1,000 tokens per tool); Phanes installs exactly three small-schema, high-leverage servers and warns against large tool-count servers (use the `gh` CLI, not the ~90-tool GitHub MCP).
+- Tool assignment tightened: `context7`/`deepwiki` granted only to Planner/Architect, Analyzer, and scout-eligible agents; Executor and Patch-Author carry no MCP tools — unlisted tools cost their invocations nothing.
+
+---
+
 ## v2.0.2 — 2026-07-10
 
 ### Changed

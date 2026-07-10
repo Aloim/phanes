@@ -1,4 +1,4 @@
-<!-- Phanes v2.0.2 — 2026-07-10 — single-file bootstrap prompt.
+<!-- Phanes v2.1 — 2026-07-10 — single-file bootstrap prompt.
      Installed copies: diff this version stamp against upstream before an update run.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
@@ -181,21 +181,24 @@ IMPORTANT: **YOU MUST** not skip any steps. Follow all steps and infer best prac
 
 #### Pre-flight Check: Model Context Protocol (MCP) Servers (Applies to all runs)
 
-**YOU MUST** attempt to access `context7` and `serena` before attempting to add them. Take note of the permissions each requires.
+**YOU MUST** attempt to access `context7`, `deepwiki`, and `serena` before attempting to add them. Take note of the permissions each requires.
 
 IMPORTANT: DO NOT EDIT THE .mcp.json directly!!
 
-* **Action 1:** Ensure `context7` is added.
-* **Action 2 (initial setup run only):** Serena is **not mandatory, but MUST be installed on the first run**: ensure `uv` is installed, then add the `serena` MCP. On update runs, verify Serena's presence but do not force-reinstall; if it was removed deliberately, respect that and note it in the session summary.
-* **Action 3:** Detect the platform **FIRST** and run only the matching variant below. PowerShell is a stated requirement on Windows — do **not** attempt the bash variant there.
-* **Action 4:** If `uv` is newly installed on POSIX, **YOU MUST** add its install path (`$HOME/.local/bin` and `$HOME/.cargo/bin`) to the user's shell profile (`.bashrc`/`.zshrc`) so it is in PATH for future runs. On Windows the uv installer updates the user PATH itself — only the *current session's* PATH needs the inline addition shown below.
+* **Action 1:** Ensure `context7` is added (HTTP transport) — live, up-to-date documentation for external libraries, fetched on demand instead of pasted into context.
+* **Action 2:** Ensure `deepwiki` is added (HTTP transport — the hosted service; its legacy SSE transport is retired and returns 410). DeepWiki answers focused questions about **external GitHub dependencies** from pre-built wikis: three tools, digest-shaped answers, so agents understand a dependency without pulling its source into context.
+* **Action 3 (initial setup run only):** Serena is **not mandatory, but MUST be installed on the first run**: ensure `uv` is installed, then add the `serena` MCP. On update runs, verify Serena's presence but do not force-reinstall; if it was removed deliberately, respect that and note it in the session summary.
+* **Action 4:** Detect the platform **FIRST** and run only the matching variant below. PowerShell is a stated requirement on Windows — do **not** attempt the bash variant there.
+* **Action 5:** If `uv` is newly installed on POSIX, **YOU MUST** add its install path (`$HOME/.local/bin` and `$HOME/.cargo/bin`) to the user's shell profile (`.bashrc`/`.zshrc`) so it is in PATH for future runs. On Windows the uv installer updates the user PATH itself — only the *current session's* PATH needs the inline addition shown below.
 * **Note:** `sequential-thinking` is **no longer installed**. Native extended thinking (the `think` / `think hard` / `ultrathink` directives embedded in agent definitions) replaces it entirely — one in-context reasoning pass instead of a tool round-trip per thought.
+* **Token discipline (why exactly these three):** every connected MCP server loads its full tool schemas into context each session — roughly 1,000 tokens per tool, paid whether the tools are used or not. Phanes installs exactly three small-schema, high-leverage servers and no others. **DO NOT** add large tool-count servers to a Phanes project by default — the GitHub MCP alone ships ~90 tools (~50k tokens of schema); the `gh` CLI does the same work at zero schema cost. Every generated agent carries the MCP Usage Rubric (Phase 4) so calls happen only where they *save* tokens.
 
 **POSIX (bash/zsh):**
 
 ```
 command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH")
 claude mcp add --transport http context7 https://mcp.context7.com/mcp
+claude mcp add --transport http deepwiki https://mcp.deepwiki.com/mcp
 command -v uvx >/dev/null 2>&1 && claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$(pwd)"
 ```
 
@@ -204,12 +207,13 @@ command -v uvx >/dev/null 2>&1 && claude mcp add serena -- uvx --from git+https:
 ```powershell
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) { powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"; $env:Path = "$env:USERPROFILE\.local\bin;$env:Path" }
 claude mcp add --transport http context7 https://mcp.context7.com/mcp
+claude mcp add --transport http deepwiki https://mcp.deepwiki.com/mcp
 if (Get-Command uvx -ErrorAction SilentlyContinue) { claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$PWD" }
 ```
 
 **Graceful degradation — there is NO stop gate here.** Verify the MCP servers are working and accessible. If one is not:
 
-* Report exactly what failed and what capability is lost (`context7` → no live library docs; `serena` → agents fall back to file reads instead of symbol search).
+* Report exactly what failed and what capability is lost (`context7` → no live library docs; `deepwiki` → no dependency-wiki digests, agents fall back to context7 or targeted source reads; `serena` → agents fall back to file reads instead of symbol search).
 * Record the failure and the retry command in the bootstrap session summary's TODO section.
 * **Continue the run.** Every generated agent treats these servers as conditional enhancements (see the Phase 4 template), so a missing server degrades performance, never correctness.
 
@@ -690,7 +694,7 @@ This is a **test-driven development (TDD)** workflow:
   + Name must indicate both domain AND methodology (e.g., `go-performance-optimizer`, `security-audit-specialist`)
   + **MUST INCLUDE color field:** Each agent receives a color (Red, Blue, Green, Yellow, Purple, Orange, Pink, Cyan) which may repeat across different agent types but helps users visually track which agents are operating. Colors are for **human tracking only** — they are never a routing or selection criterion beyond tie-breaking visual diversity.
   + Naming Convention: lowercase, hyphens, 2-4 words, clearly indicating function, memorable (e.g., `go-grpc-specialist`).
-* **Tool Assignment (Least Privilege):** Explicitly list only the minimal tools required. Omit `tools` only if absolutely necessary; default access is too broad. **Minimize** `Edit`/`Write`. **For agents that interact with the registry/script library, ensure they have execution access to `.phanes/scripts/`. Where Serena is installed, grant it to analysis-heavy agents — symbol search before file reads. Scout-eligible agents need the agent-spawning tool; Executor and Patch-Author do not.**
+* **Tool Assignment (Least Privilege):** Explicitly list only the minimal tools required. Omit `tools` only if absolutely necessary; default access is too broad. **Minimize** `Edit`/`Write`. **For agents that interact with the registry/script library, ensure they have execution access to `.phanes/scripts/`. Where Serena is installed, grant it to analysis-heavy agents — symbol search before file reads. Grant `context7` and `deepwiki` to Planner/Architect, Analyzer, and scout-eligible agents only. Executor and Patch-Author get NO MCP tools and no agent-spawning tool — every tool an agent lists is schema weight its invocations pay for; an unlisted tool costs nothing.**
 
 ---
 
@@ -764,8 +768,7 @@ You **MUST** immediately
 - Triage Tier: Confirm whether this task is T1, T2, or T3 (see project CLAUDE.md). Load only the context that tier permits.
 - Gather Data: Open relevant files/logs. If the required raw material exceeds the Scout Cost Guard threshold (digests ≥10:1, not needed verbatim later, substantial work remaining), spawn a read-only scout and consume its digest instead. [Scout-eligible archetypes only.]
 - Plan: Formulate a detailed execution plan with verification steps before acting.
-- T2/T3 only, if Serena is installed: use symbol search before file reads to minimize token usage.
-- T2/T3 only, when external library behavior matters: use context7 for up-to-date documentation.
+- T2/T3 only: before ANY MCP call, consult the MCP Usage Rubric below — MCP is for when it SAVES context, never a reflex.
 - Registry Reads (architect/designer agents only): Before designing any new API, run `phanes list-apis <module>` for affected modules and read `documentation/registry/tier2/<module>.md` annotations. If an existing API serves the need, use it — duplicates are forbidden.
 
 ## Specialized skills you bring to the team
@@ -787,6 +790,12 @@ You **MUST** immediately
 | <task-name 2>  | <agent-name 2>    | (e.g. design sanity check)             |
 | api-verify     | api-monitor       | After ANY structural code change (T2/T3) |
 | final          | primary           | Work complete & passes Critic review   |
+
+### MCP Usage Rubric (token discipline)
+An MCP call is justified ONLY when it costs fewer tokens than the native alternative. **Default: a targeted Read/Grep under ~2,000 tokens beats any MCP call — make no call.**
+- **Serena** (if installed; T2/T3): symbol search / find-references when locating code across multiple files. NOT for: T1 fixes, files already in context, or content you will need in full anyway.
+- **context7** (T2/T3): up-to-date documentation for an external library whose behavior matters to this change. NOT for: language/stdlib basics, or anything the project's own registry and documentation tree already answer.
+- **deepwiki** (T2/T3; scout-eligible agents): architecture-level questions about an EXTERNAL GitHub dependency — call `read_wiki_structure` first, then ONE focused question; consume the digest. NOT for: this project's own code (NEVER — the registry and documentation tree own that), or trivia a single file read settles.
 
 ### Operating protocol
 - **Symbol-first analysis (if Serena is installed)** – use symbol search before file reads to minimize token usage; fall back to targeted file reads otherwise.
