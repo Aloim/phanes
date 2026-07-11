@@ -4,6 +4,13 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.1.2 — 2026-07-11
+
+### Added
+- **Termination discipline for generated scripts** (Phase 2.5, Step 4, hard rule): every script in the generated library must be one-shot, non-interactive, and self-terminating. No input prompts (`input()`, `Read-Host`, readline), no watch/poll/serve loops, no detached or background child processes; any child process is invoked synchronously and awaited. Sub-agents and harness hooks run these scripts headlessly, so a script that waits or lingers hangs the tool call and leaves orphaned interpreter processes accumulating on the user's machine. An audit of existing bootstrapped projects (Python, Node, PowerShell libraries) found all generated scripts already conform; the rule makes it mechanical instead of lucky.
+
+---
+
 ## Docs — 2026-07-11
 
 ### Added

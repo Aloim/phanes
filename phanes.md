@@ -1,4 +1,4 @@
-<!-- Phanes v2.1.1 — 2026-07-10 — single-file bootstrap prompt.
+<!-- Phanes v2.1.2 — 2026-07-11 — single-file bootstrap prompt.
      Installed copies: diff this version stamp against upstream before an update run.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
@@ -507,6 +507,8 @@ Sub-agents do not pay full ceremony for every task. **YOU MUST** record these ti
 #### Step 4: Script Library
 
 Detect the project's primary language and build system from Phase 1 findings. Generate `.phanes/scripts/` with the following scripts adapted to that language. Each script does exactly one thing. Each script eliminates a class of forgettable rule from sub-agent prompts.
+
+**Termination discipline (hard rule):** every generated script is one-shot, non-interactive, and self-terminating: it reads its arguments (hooks additionally read the tool-call JSON from stdin), does its single job, prints, and exits with a status code. Scripts **MUST NOT** prompt for input (`input()`, `Read-Host`, readline prompts), **MUST NOT** watch, poll, serve, or loop indefinitely, and **MUST NOT** spawn detached or background child processes; any child process is invoked synchronously and awaited. Sub-agents and harness hooks run these scripts headlessly, so a script that waits or lingers does not fail loudly: it hangs the tool call and leaves orphaned interpreter processes accumulating on the user's machine.
 
 * **`phanes new-file <module> <path> "<description>"`** — creates a file with the header stamp. **Refuses** if description is missing, empty, or shorter than five words. `<module>` may be a source module, `tests`, or `docs`; `docs` targets receive the DOC DISCIPLINE header (Step 2b) instead of the module stamp — the mandatory description becomes the file's DOC line — and the script finishes by invoking `phanes doc-index`. Header template for source/tests (use language-appropriate comment syntax):
   ```
