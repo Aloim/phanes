@@ -4,6 +4,13 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## Docs — 2026-07-11
+
+### Added
+- README: **Companion tools** section expanded with [Philia](https://github.com/Aloim/philia), a collaborative browser-shared terminal for watching and driving a Phanes-managed agent team together over a password-protected link, and [Mosyn](https://github.com/Aloim/mosyn), shared decentralized project memory for Claude Code agents. The section now opens with the modularity stance: Phanes keeps its core to one file, and every companion is a standalone tool that also cooperates with the structures Phanes generates. A matching note sits in the README intro.
+
+---
+
 ## v2.1.1 — 2026-07-10
 
 ### Changed
