@@ -1,5 +1,5 @@
-<!-- Phanes v2.1.2 — 2026-07-11 — single-file bootstrap prompt.
-     Installed copies: diff this version stamp against upstream before an update run.
+<!-- Phanes v2.2 — 2026-07-15 — single-file bootstrap prompt.
+     Installed copies self-update: Phase 0 Step 0 checks this stamp against upstream on every run and refreshes the install when a newer version has shipped.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
 # Phanes
@@ -57,6 +57,7 @@ These principles are stated **once**, here. Every later phase references them by
   3. **Reflect (Reflexion):** The primary agent (or a new one) uses the Critic's audit to refine the work.
   4. **Synthesize (Consolidation):** An **Arbiter / Synthesizer** agent (the 'Orchestrator' archetype) **MUST** be invoked to consolidate all perspectives (primary, critic, and parallel agents), resolve conflicts, judge the proposed solutions, and produce the final, unified action plan. *The synthesized plan then receives one final Critic pass before it reaches the primary — the artifact that gets applied is always the artifact that was audited (see Phase 4 Chain Design Rules).*
      *Internalization:* Furthermore, **each sub-agent MUST implement an internal mini-R.A.C.R. loop** within its own prompt execution to self-check before returning.
+* **Visual Evidence Mandate (No UI Approval by Prose):** Any change that alters a rendered user interface — layout, styling, component structure, theming, visual states — carries a **visual evidence obligation** through its entire chain. UI proposals **MUST** declare their target viewport(s), affected screens/states, and the reference design where one exists (mockup file, Figma link, design spec); the Critic returns `fix_required` for any UI proposal missing this declaration — fixing the evidence contract *before* apply is what makes post-hoc cherry-picked captures impossible. After the Executor applies a UI diff, the project's **designated visual verifier** (Phase 3) captures evidence at the declared viewports and runs the mechanical pass/fail checklist (Phase 4); its output is a flag, not a fix. Prose claims — "looks good", "should render correctly", and every equivalent — are **FORBIDDEN** as approval grounds at every tier; only captured images or an explicit `VISUAL: UNVERIFIED` flag exist. **Soft gate:** where capture tooling is absent, fails, or returns empty frames, the verifier **MUST** diagnose why, record the diagnosis in the capability failure memory (Phase 2.5 Step 4) and the session summary's TODOs with a user-eyeball request, and proceed with the visual dimension explicitly marked `VISUAL: UNVERIFIED` — approval then covers code-level correctness only. Chains never block on missing tooling; they never silently pass visuals either.
 * **Context Management & Focused Injection:** Sub-agents operate with isolated context; they do **NOT** inherit the main session's history. This enforces focus and prevents context dilution. Therefore, Phanes (the Orchestrator) **MUST** employ a strict **Context Injection Protocol** when invoking any sub-agent:
 
   1. **Select:** Identify only the essential context (files, previous reports, specific instructions) required for the task.
@@ -73,6 +74,7 @@ These principles are stated **once**, here. Every later phase references them by
 
   **Scout Cost Guard (non-negotiable):** Spawning a scout is never free — the scout pays its own system prompt and re-reads the material before saving anything. Spawn only when **ALL** of these hold: the material digests at ≥10:1 (test logs, module surveys, registry sweeps) and will not be needed verbatim later; the specialist has substantial work remaining to amortize the digest against; briefing the scout does not require injecting most of the specialist's own context. **Never** scout content you will later edit or quote — you will pay for the raw read anyway. Below ~2,000 tokens of raw material, always read directly. Exception: when loading raw material would force a tier promotion or exhaust the window, scout regardless — headroom outranks spawn overhead. Corollaries: scouts belong *early* in a long task, never in the final stretch; the highest-value scout is a Critic's verification run (50k tokens of test output → a 500-token verdict).
 * **Proactive Delegation & Early Verification:** Offload detail-oriented or uncertain subtasks to sub-agents **as early as possible**. Use specialized agents to verify facts, gather additional data, or explore alternatives at the planning stage, rather than burdening the main agent. This preserves main context capacity and catches potential issues or knowledge gaps sooner, improving overall reliability.
+* **Installed-Capability Leverage (Conditional Enhancements Only):** Beyond the three servers Phanes installs itself, every run **MUST** inventory what the user has already installed — MCP servers, plugins, skills, slash commands, pre-existing non-Phanes agents (Phase 0) — and match it against the project's *actual* needs from Phase 1. Wiring is never wholesale: a matched capability is granted per-agent under least privilege where the domain match earns its schema weight (Phase 3); an unmatched capability is simply not wired. Phanes **NEVER** installs, uninstalls, or reconfigures anything the user set up — discovery, not stewardship. Every discovered capability is a **conditional enhancement** exactly as Serena is: generated agent text phrases usage as "if available"; absence or failure degrades performance, never correctness; no chain ever blocks on a discovered tool. Skills cost nothing until invoked — reference them freely where they fit; MCP tool schemas cost context every session — grant them stingily. **Failure memory:** when a granted capability fails at use time, the failing agent diagnoses why, records it in `.phanes/config.json` (Phase 2.5 Step 4) and the session summary, and later runs read that memory before re-granting or retrying.
 * **Procedure in Scripts, Judgment in Prompts:** Any rule a script, hook, or linter can enforce **MUST** be a script in the Phanes script library (see Phase 2.5), invoked by sub-agents on demand — and, where the harness supports it, wired into Claude Code hooks so it *cannot* be skipped (Phase 2.5 Step 4b). Sub-agent prompts hold rules **only** for judgment work — design fit, structural choices, naming, style. Mechanical rules in prompts are forgotten under context pressure; scripts do not forget; hooks cannot be forgotten. **This principle is non-negotiable.**
 * **Single-Writer Per Artifact:** Each registry tier, session summary, architecture snapshot, or generated documentation file has exactly **one** sub-agent or script permitted to write to it. Many readers, one writer. This eliminates coordination overhead, makes drift detectable, and prevents conflicting writes. Scouts, being read-only by construction, preserve this discipline structurally.
 * **Documentation Anti-Bloat & Index-First Navigation:** Documentation is only useful if an agent can load the relevant slice without drowning. Every agent-authored documentation file carries a doc-discipline header whose first line is its one-line description; every folder under `documentation/` carries a **GENERATED** `_index.md`, built from those description lines by `phanes doc-index` — the script is the **SOLE WRITER** of every index, and hand-editing an index is **FORBIDDEN**. Indexing never depends on perfect compliance: files lacking a DOC line are still indexed via fallback (first heading, then filename). Living documents respect a soft ceiling of 500 lines (deliberately the same number as the 500 LOC source threshold — the whole system has exactly one size number to remember); a file that outgrows the ceiling is split into a same-named folder of focused topic files. Frozen history — session summaries, past-dated snapshots, `archive/` — is **NEVER** edited to conform (see Phase 2.5 Step 2b). Consumers **NEVER** bulk-read or glob-scan `documentation/`: read the folder's `_index.md`, pick the entry, recurse, load only the target file(s). Locating knowledge must cost index reads — tens of tokens per hop, logarithmic in file count — never tree scans. Mechanics in Phase 2.5 Step 2b. A bloated documentation file or a stale index is a drift event of the same class as registry drift.
@@ -112,11 +114,12 @@ The "No Direct Code Modification" policy ensures that sub-agent outputs are conf
 >    * Required tools availability
 >    * Agent color diversity (when multiple agents with similar capabilities exist)
 > 4. For complex advisory tasks, claude must launch 2 to 5 *multiple agents* with different expertise to generate diverse perspectives
-> 5. Always conclude with the terminal quality gate, in this exact order: Synthesizer (only when parallel perspectives were used) → Critic → api-monitor (T2/T3 structural changes) → primary. The final Critic audits the *consolidated* output — never raw perspectives.
+> 5. Always conclude with the terminal quality gate, in this exact order: Synthesizer (only when parallel perspectives were used) → Critic → designated visual verifier (post-apply, UI-touching changes only) → api-monitor (T2/T3 structural changes) → primary. The final Critic audits the *consolidated* output — never raw perspectives.
 > 6. Employ Git-based checkpoints like `git checkout -b claude-session-[timestamp]-[purpose]` for version control of thought processes
 > 7. **Critical:** Ensure agent outputs are trackable with unique IDs when issues are identified
 > 8. For T2/T3 tasks, the chain MUST end with `api-monitor` to verify registry tier 1 stays in sync with reality.
 > 9. Specialists may spawn read-only scout subagents per the Scout Pattern and its Cost Guard (see the project CLAUDE.md summary of §II); scouts retrieve and digest, never judge, never write.
+> 10. UI-touching tasks follow the **Visual Evidence Mandate** (§II): the proposal declares viewports, screens/states, and reference design; the Critic enforces the declaration; the designated visual verifier captures and checklist-verifies the applied result before the chain closes. Prose is never evidence.
 
 ---
 
@@ -151,6 +154,38 @@ You will now systematically create the sub-agent definitions and workflow files.
 
 IMPORTANT: **YOU MUST** not skip any steps. Follow all steps and infer best practices at all times.
 
+#### Step 0: Self-Version Check (Applies to all runs)
+
+**IMPERATIVE:** Before any other action — before the run-state marker, before any pre-flight — **YOU MUST** verify this prompt is the newest published Phanes. A stale spec must never bootstrap or update a project.
+
+1. **Read your own version** from the stamp on line 1 of this file (`<!-- Phanes vX.Y.Z — ... -->`).
+2. **Fetch the upstream stamp.** Download the published file to a temporary location and read its line-1 stamp. Detect the platform **FIRST** and run only the matching variant:
+
+   **POSIX (bash/zsh):**
+
+   ```
+   curl -fsSL https://raw.githubusercontent.com/Aloim/phanes/main/phanes.md -o /tmp/phanes-upstream.md && head -1 /tmp/phanes-upstream.md
+   ```
+
+   **Windows (PowerShell 5.1+):**
+
+   ```powershell
+   try { Invoke-WebRequest -Uri https://raw.githubusercontent.com/Aloim/phanes/main/phanes.md -OutFile "$env:TEMP\phanes-upstream.md" -ErrorAction Stop; Get-Content "$env:TEMP\phanes-upstream.md" -TotalCount 1 } catch { Write-Output "FETCH-FAILED" }
+   ```
+
+3. **Compare numerically.** Parse `v<major>.<minor>[.<patch>]` from both stamps (a missing patch component counts as 0) and compare component-wise. **NEVER** compare version strings lexically.
+
+   * **Upstream newer →** sanity-check the download first: the file **MUST** begin with `<!-- Phanes v`. A 404 body, an HTML error page, or a truncated fetch must never clobber a working install — if the check fails, treat it as a fetch failure below. Then overwrite **every** installed copy found: project-level `.claude/commands/phanes.md` and user-level `~/.claude/commands/phanes.md` (Windows: `$env:USERPROFILE\.claude\commands\phanes.md`). If **no** copy exists at either path (renamed or nonstandard install), do **NOT** stop — you cannot refresh what you cannot find, and stopping would re-run the same stale prompt forever; record the newer upstream version and the standard reinstall command in the session summary's TODO section and proceed with the run. Otherwise **STOP** and tell the user (verbatim, substituting the real version numbers and the refreshed path(s), do not paraphrase):
+
+     > "Phanes self-updated: vX.Y.Z → vA.B.C (refreshed: <path(s)>). Re-run `/phanes` now so this run executes the newest spec. Nothing else in your project was modified by this run."
+
+     Do **NOT** proceed to any later step or phase — stopping here has zero project side effects because the run-state marker has not been touched.
+   * **Same version →** proceed. One line: "Version check: vX.Y.Z is current."
+   * **Local newer than upstream →** proceed without downgrading — this is a developer working copy. **NEVER** downgrade.
+   * **Fetch fails** (offline, rate-limited, repository unreachable) **→** graceful degradation, **NO** stop gate: proceed with the run and record the failed check plus the retry command in the session summary's TODO section, exactly as with a failed MCP install.
+
+**Token discipline:** this step costs one small HTTP fetch and a stamp comparison per run; the STOP path fires only when a release has actually shipped.
+
 #### Hidden Directory Awareness & Run-State Marker
 
 > **IMPORTANT:**
@@ -167,7 +202,7 @@ IMPORTANT: **YOU MUST** not skip any steps. Follow all steps and infer best prac
 
 #### Run Type Determination & Initial Setup Handling
 
-**IMPERATIVE:** Your first action **MUST** be to determine the run type using the marker rules above.
+**IMPERATIVE:** After the Step 0 version check, your first action **MUST** be to determine the run type using the marker rules above.
 
 1. **Initial Setup Run:**
 
@@ -217,6 +252,19 @@ if (Get-Command uvx -ErrorAction SilentlyContinue) { claude mcp add serena -- uv
 * Record the failure and the retry command in the bootstrap session summary's TODO section.
 * **Continue the run.** Every generated agent treats these servers as conditional enhancements (see the Phase 4 template), so a missing server degrades performance, never correctness.
 
+#### Pre-flight: Installed Capability Inventory (Applies to all runs)
+
+This is **Installed-Capability Leverage** (§II) made mechanical. **YOU MUST** inventory what the user has already installed beyond the three Phanes servers — you are discovering assets to leverage, never auditing or altering the user's machine.
+
+1. **Enumerate MCP servers:** run `claude mcp list` (all scopes). Note each server's name and apparent domain.
+2. **Enumerate session-visible tools and skills:** list the tool names, user-invocable skills, and agent types visible in your current session — plugin-provided MCP tools and skill packs included.
+3. **Enumerate commands and foreign agents:** list `.claude/commands/` and `~/.claude/commands/` (slash commands), and any `.claude/agents/` definitions **not** generated by Phanes. Foreign agents are the user's — **NEVER** overwrite, regenerate, or roster them; note their existence for the session summary only.
+4. **Read the failure memory first (update runs):** if `.phanes/config.json` carries a `capabilities.failures[]` block from an earlier run, load it — a capability that failed before is retried or left degraded *deliberately*, never rediscovered naively.
+5. **Hold the inventory** as a table (name, type, apparent domain) for Phase 3 matching. Do **NOT** grant anything yet — matching happens against Phase 1 findings, and granting without a confirmed project need violates §II.
+6. **Graceful degradation:** a failed listing (`claude mcp list` errors, missing directories, session tool/skill introspection unavailable) skips with a session-summary TODO. There is **NO** stop gate here.
+
+**Token discipline:** the inventory costs a few tool calls once per run; the discipline lives in Phase 3's matching rubric — discovery is cheap, granting never is.
+
 #### Handling `$ARGUMENTS` (User Directives) (Applies to all runs)
 
 Before proceeding, you **MUST** check for any provided `$ARGUMENTS`. Carefully parse them to understand the user's specific intent. If these arguments conflict with the default installation plan, **you MUST prioritize the `$ARGUMENTS`** over the default behavior.
@@ -254,6 +302,7 @@ REMINDER: **YOU MUST** not skip any steps. Follow all steps and infer best pract
    * `.gitignore` to understand excluded content
    * **Primary language(s) and build system** — required for Phase 2.5 script generation (TypeScript/tsc, C#/Unity, Python, Rust, Move, mixed)
    * **Module boundaries** — your best inference of how the codebase splits; needed for Phase 2.5 registry slicing **and for CLAUDE.md placement (Phase 2)**
+   * **UI surface** — whether the project renders a user-facing interface (web frontend framework, game engine, desktop toolkit) and which module owns it; required for the Visual Evidence Mandate (§II) wiring in Phases 3–4. A project with no rendered UI generates none of that wiring.
 2. **Repository Context Expert Persona Activation:**
 
    * "As a Senior Project Archaeologist with 15 years of experience, I examine project DNA through documentation, code structure, and development patterns to determine the true purpose"
@@ -274,7 +323,7 @@ DON'T FORGET: **YOU MUST** not skip any steps. Follow all steps and infer best p
 
 **CLAUDE.md Placement Rules:**
 
-* **Project root `CLAUDE.md`:** carries the primary agent's operating instructions — the Workflow Execution Strategy block (§III), the tier-triage-first mandate, the tier definitions summary, a compact restatement of the Scout Pattern and its Cost Guard, the **Documentation Navigation block** below, and the pointer to `.claude/workflows/`. This file holds **mandates**, not guidance — do not place the notice block below on it.
+* **Project root `CLAUDE.md`:** carries the primary agent's operating instructions — the Workflow Execution Strategy block (§III), the tier-triage-first mandate, the tier definitions summary, a compact restatement of the Scout Pattern and its Cost Guard, the **Documentation Navigation block** below, the **Installed Capability Register** below, and the pointer to `.claude/workflows/`. This file holds **mandates**, not guidance — do not place the notice block below on it.
 * **Module-root `CLAUDE.md` files:** create one per module identified in Phase 1 — **and only at module roots, never in every subfolder**. Per-subfolder sprawl multiplies a ~90-word notice across dozens of directories, pollutes context, and breeds stale guidance; module roots give agents exactly one folder-local knowledge surface per module.
 * For each module-root CLAUDE.md, include the following notice at the top:
 
@@ -295,6 +344,14 @@ carries a GENERATED `_index.md` — read the index first, pick the entry, recurs
 the target file(s). This binds every agent, scouts included. Indexes are generated by
 `phanes doc-index` and hand-editing them is FORBIDDEN — regenerate to update.
 Audit documentation hygiene with `phanes doc-check`.
+```
+
+**Installed Capability Register (root CLAUDE.md — YOU MUST include and maintain this block):** one line per *matched* capability from the Phase 3 matching rubric — `name (type) → granted agents → purpose → fallback`. The Phanes run is this block's **single writer**; it is regenerated on every run so grants for capabilities the user has since removed disappear with them. Unmatched inventory belongs in the session summary, **never** here — every CLAUDE.md line is a permanent context tax. Shape (adapt contents to the actual matches; omit the block only when nothing matched):
+
+```
+**Installed Capability Register (GENERATED — regenerated by every /phanes run; hand-editing FORBIDDEN):**
+- chrome-devtools (MCP) → designated visual verifier: screenshot capture for UI verification; fallback: VISUAL: UNVERIFIED per the Visual Evidence Mandate.
+- figma (MCP) → frontend specialist: reference-design retrieval; fallback: local mockup files.
 ```
 
 **Deploy Main Project Instructions (`CLAUDE.local.md` in project root):**
@@ -498,7 +555,7 @@ Sub-agents do not pay full ceremony for every task. **YOU MUST** record these ti
 | **T2 — Feature work** | Feature or refactor within a single module | Architecture overview + that module's deep-dive + tier 1 slice for that module + tier 2 for that module + latest session summary | Primary + Planner/Architect + Executor + Critic + api-monitor | Standalone report(s) per the report template + session summary entry. |
 | **T3 — Cross-cutting** | Multi-module change, API change, migration, anything touching ≥2 modules | Architecture overview + all touched module deep-dives + tier 1 slices for all touched modules + tier 2 for all touched modules + active plan | Full chain including api-monitor invoked between phases | Plan in `documentation/plans/` + reports + session summary entry. |
 
-**Review is universal; depth scales.** Per §III, no tier skips the Critic — T1's Critic pass is a single diff review, T3's is the full audit-report ceremony. Documentation weight scales the same way: the simpler the tier, the lighter the paper trail — but the trail always exists.
+**Review is universal; depth scales.** Per §III, no tier skips the Critic — T1's Critic pass is a single diff review, T3's is the full audit-report ceremony. Documentation weight scales the same way: the simpler the tier, the lighter the paper trail — but the trail always exists. UI-touching tasks at **every** tier additionally engage the designated visual verifier post-apply (Visual Evidence Mandate, §II) — the table's agent lists assume no rendered UI was touched.
 
 **Promotion rule:** if any sub-agent realizes mid-task that scope exceeds its tier's loaded context, it **MUST** halt and request promotion via the orchestrator before continuing. Improvising structural decisions outside loaded context is forbidden and is a reportable drift event.
 
@@ -531,7 +588,17 @@ Detect the project's primary language and build system from Phase 1 findings. Ge
 
 * **`phanes module-list`** — prints the configured module list (read from `.phanes/config.json`).
 
-Write `.phanes/config.json` with the confirmed module list, primary language, build system, hook preferences, and language-specific extractor configuration.
+Write `.phanes/config.json` with the confirmed module list, primary language, build system, hook preferences, language-specific extractor configuration, and the `capabilities` block — the durable memory of the Installed Capability Inventory (Phase 0) and its failures:
+
+```json
+"capabilities": {
+  "inventoryDate": "YYYY-MM-DD",
+  "granted": [{ "name": "", "type": "mcp|skill|command|agent", "agents": [], "purpose": "", "fallback": "" }],
+  "failures": [{ "name": "", "date": "", "symptom": "", "diagnosis": "", "retry": "" }]
+}
+```
+
+The `failures[]` entries are written by whichever agent hit the failure (symptom, diagnosis, retry command) and read by the next run's inventory step **before** re-granting or retrying — this is how a broken capture tool or dead MCP server is remembered across sessions instead of rediscovered by crashing into it again.
 
 **Git pre-commit hook (optional, belt-and-suspenders for human commits):** ask the user — "Install `phanes loc-check` as a pre-commit hook? [Y/n]" — and act on the answer. If declined, write the install command to the bootstrap session summary's TODO section so it can be installed later. (Agent-side enforcement does not depend on this — see Step 4b.)
 
@@ -631,6 +698,7 @@ CRITICAL: Ensure you seed the project root CLAUDE.md with instructions to follow
 2. You **MUST** think hard and come up with a list of tasks that will benefit by chaining agents together.
 3. You **MUST** codify these chained agent workflows for ALL key workflows which will see great benefit from a chained approach — in `.claude/workflows/` YAML. **The workflow files are the single source of truth for chain composition**; agent-file Next Task tables mirror them and yield to them on conflict.
 4. You **MUST** ultrathink while creating workflow chains: walk every chain end-to-end mentally, simulate where documentation might not be followed, where hallucinations may occur, where bad code might be written — and close those gaps before writing the files. This will inform you how to properly populate the Next Task / Next Agent table in every sub-agent definition file.
+5. For projects with a detected UI surface (Phase 1), `.claude/workflows/` **MUST** include a `ui-change` workflow codifying the Visual Evidence Mandate (§II) chain: `producer → Critic (diff review + evidence-contract enforcement) → [baseline capture by the designated visual verifier — T2/T3 only] → Executor applies → designated visual verifier (after-capture + pass/fail checklist — output is a flag, not a fix) → api-monitor (T2/T3 structural) → primary`. Checklist failures route `fix_required` back through the Reflect loop (fix → re-apply → re-capture). T1 UI tweaks get a single after-capture at the primary viewport, no baseline — review depth scales, presence never waives.
    (Completion of these steps diligently will not only enable efficient teamwork but will also activate new emergent workflows and use cases on demand and will pay off more than you can imagine! Take pride in this work!)
 
 **NOTICE:** Remember your efforts right now are CRITICAL to the success or failure of this project and will pay off 10 fold throughout the course of this project! Now IS NOT the time to phone it in.
@@ -673,6 +741,7 @@ This is a **test-driven development (TDD)** workflow:
   + Remove any agent archetype not clearly relevant to the **core project purpose**
   + Add specialized agents only for genuine project needs identified in documentation and code
   + **REQUIRED:** Ensure the roster includes an `api-monitor` (Monitor archetype variant) and an `architect`/`designer` (Planner/Analyzer archetype variant). These are non-optional because they are the single writers of tier 1 and tier 2 registries respectively (Phase 2.5).
+  + **REQUIRED (UI projects only) — the designated visual verifier is a duty, not a headcount:** when Phase 1 detected a UI surface, designate exactly **one** existing roster agent to carry the visual verification duty — prefer the frontend/UI specialist; fall back to the closest Monitor/Validator variant. The designation adds the visual-verification block (Phase 4 template) to that agent's operating protocol and grants it the capture tooling matched from the Phase 0 inventory. Do **NOT** create a dedicated verifier agent — the roster ceiling and description tax forbid spending headcount on a duty an existing specialist carries. The duty can **NEVER** fall on Executor or Patch-Author (they carry no MCP tools) and can **NEVER** be delegated to scouts (scouts never write; captured evidence is a written artifact). One-time setup on designation: append `reports/ui-evidence/` to the project's `.gitignore` (merge, never overwrite; no `.gitignore` → session-summary TODO) — the durable record is the textual pass/fail report, not the image binaries.
   + **Roster ceiling:** Target **6–10 agents**. Every agent's `description` field is injected into the primary agent's context in **every session, every turn** — the roster is a permanent context tax, and it grows linearly with headcount. Merge near-duplicate specializations *within* an archetype (they share ~70% operating-protocol boilerplate; the merged prompt is far smaller than two separate ones, and it is paid only per-invocation, not always-on). **NEVER** merge genuinely distinct domains into one agent — a database-migration expert fused with a CSS specialist dilutes the persona conditioning that makes each effective. Every agent beyond 10 **MUST** be justified in the bootstrap session summary against its description tax.
 * **Parallel Perspectives Strategy:** For especially complex or high-ambiguity challenges, consider assigning multiple sub-agents to the same task with different approaches. **When implementing parallel perspectives:**
 
@@ -696,7 +765,7 @@ This is a **test-driven development (TDD)** workflow:
   + Name must indicate both domain AND methodology (e.g., `go-performance-optimizer`, `security-audit-specialist`)
   + **MUST INCLUDE color field:** Each agent receives a color (Red, Blue, Green, Yellow, Purple, Orange, Pink, Cyan) which may repeat across different agent types but helps users visually track which agents are operating. Colors are for **human tracking only** — they are never a routing or selection criterion beyond tie-breaking visual diversity.
   + Naming Convention: lowercase, hyphens, 2-4 words, clearly indicating function, memorable (e.g., `go-grpc-specialist`).
-* **Tool Assignment (Least Privilege):** Explicitly list only the minimal tools required. Omit `tools` only if absolutely necessary; default access is too broad. **Minimize** `Edit`/`Write`. **For agents that interact with the registry/script library, ensure they have execution access to `.phanes/scripts/`. Where Serena is installed, grant it to analysis-heavy agents — symbol search before file reads. Grant `context7` and `deepwiki` to Planner/Architect, Analyzer, and scout-eligible agents only. Executor and Patch-Author get NO MCP tools and no agent-spawning tool — every tool an agent lists is schema weight its invocations pay for; an unlisted tool costs nothing.**
+* **Tool Assignment (Least Privilege):** Explicitly list only the minimal tools required. Omit `tools` only if absolutely necessary; default access is too broad. **Minimize** `Edit`/`Write`. **For agents that interact with the registry/script library, ensure they have execution access to `.phanes/scripts/`. Where Serena is installed, grant it to analysis-heavy agents — symbol search before file reads. Grant `context7` and `deepwiki` to Planner/Architect, Analyzer, and scout-eligible agents only. Executor and Patch-Author get NO MCP tools and no agent-spawning tool — every tool an agent lists is schema weight its invocations pay for; an unlisted tool costs nothing.** **Discovered-capability grants (Installed-Capability Leverage, §II):** match the Phase 0 inventory against Phase 1 findings. Grant a discovered capability to an agent **ONLY** when **ALL** four hold: (a) the capability's domain overlaps the project's detected stack; (b) the receiving agent's archetype would call it in its normal duties; (c) the grant names its fallback in the agent's definition; (d) the server's schema mass is proportionate to the value delivered — a large-tool-count server (see the ~90-tool GitHub MCP caution in the pre-flight) is granted **ONLY** when no leaner path (CLI, script, targeted read) does the same work. Examples: browser/devtools MCP → the designated visual verifier in web projects; design-tool MCP → frontend agents where reference designs exist; game-engine MCP → engine-project specialists; database MCP → data-layer agents. Skills are referenced, not granted — they cost nothing until invoked; an agent that should invoke skills lists the Skill tool. Executor and Patch-Author receive **NO** discovered capabilities — the existing rule stands unweakened.
 
 ---
 
@@ -721,6 +790,7 @@ Iteratively **GENERATE** each sub-agent's definition file based on the roster fr
    * **Parallel-perspective chains terminate:** perspectives → **Synthesizer** → **Critic** → `api-monitor` (T2/T3) → `primary`. The final Critic audits the Synthesizer's consolidated plan, never the raw perspectives — the artifact that gets applied is always the artifact that was audited.
    * If a generated chain lacks a Critic, insert the nearest-matching Critic as the penultimate step before `primary`. This is non-negotiable — it holds even for T1 (lightweight diff review, per Phase 2.5 Step 3).
    * Every chain that performs structural code change **MUST** include `api-monitor` as the post-Critic step for T2 and T3 tasks. Insert it automatically if the generated chain omits it. This is how tier 1 registry stays in sync with reality.
+   * Every chain whose change alters a rendered UI **MUST** include the designated visual verifier as the post-Executor step — before `api-monitor` where both apply — per the Visual Evidence Mandate (§II). Insert it automatically if the generated chain omits it. A UI chain without captured evidence is as broken as a structural chain without `api-monitor`.
    * Colors never influence routing (Phase 3). Route on domain expertise and tool fit alone.
    * When no "next agent" is specified for a task, the project CLAUDE.md rule applies: the output is sent for Critic review following the single role or serial chain.
 
@@ -798,6 +868,7 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
 - **Serena** (if installed; T2/T3): symbol search / find-references when locating code across multiple files. NOT for: T1 fixes, files already in context, or content you will need in full anyway.
 - **context7** (T2/T3): up-to-date documentation for an external library whose behavior matters to this change. NOT for: language/stdlib basics, or anything the project's own registry and documentation tree already answer.
 - **deepwiki** (T2/T3; scout-eligible agents): architecture-level questions about an EXTERNAL GitHub dependency — call `read_wiki_structure` first, then ONE focused question; consume the digest. NOT for: this project's own code (NEVER — the registry and documentation tree own that), or trivia a single file read settles.
+- **Discovered servers (this project — GENERATED from the Phase 0 inventory):** <one line per discovered server granted to THIS agent, in the exact format of the lines above: when it saves tokens, NOT-for cases, fallback. Omit this entry entirely when no discovered server is granted to this agent.>
 
 ### Operating protocol
 - **Symbol-first analysis (if Serena is installed)** – use symbol search before file reads to minimize token usage; fall back to targeted file reads otherwise.
@@ -809,6 +880,7 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
 - **Single-writer discipline** – write only to artifacts assigned to your archetype (see Phase 2.5 Step 8).
 - **File creation** – use `phanes new-file <module> <path> "<description>"`. Never create files by other means (the stamp-guard hook denies it regardless).
 - **Documentation discipline** – any doc you write respects the 500-line soft ceiling and carries both DOC header lines; NEVER bulk-read `documentation/` — descend the `_index.md` indexes and load only the target files (scouts included); never hand-edit an `_index.md` — run `phanes doc-index`.
+- **Visual verification duty** – [designated visual verifier only — omit for every other agent] after the Executor applies a UI diff, capture evidence at the declared viewports into `reports/ui-evidence/<date>-<task>/` (T2/T3 additionally require the pre-apply baseline capture), then run the pass/fail checklist: visual hierarchy intact; no clipped, overlapping, or truncated elements; focus and hover states present; contrast/readability; correct layout at each declared viewport; match against the declared reference design; regression scan of adjacent UI. Output is a flag, not a fix. Tooling absent, failing, or returning empty frames → diagnose why, record the diagnosis in `.phanes/config.json` failure memory plus a session-summary TODO with a user-eyeball request, and mark `VISUAL: UNVERIFIED` — never a prose pass, never a silent pass.
 - Emit **exact JSON**:
    {
      "report_path": "<relative/path/to/report.md>",
@@ -843,7 +915,12 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
          2) List of identified gaps/oversights/violations
          3) Alternative approaches/Best practice recommendations
          4) Numbered list of specific, actionable remediation steps
-         5) File Reference and Line Numbers where applicable -->
+         5) File Reference and Line Numbers where applicable
+         6) UI changes (Visual Evidence Mandate, §II): verify the proposal declares target viewport(s),
+            affected screens/states, and reference design — return fix_required if the declaration is
+            missing. Prose claims ("looks good", "renders correctly") are NOT evidence; only captured
+            images or an explicit VISUAL: UNVERIFIED flag exist. Borderline or contested checklist
+            calls from the designated visual verifier route to you for judgment. -->
 
     <!-- CRITICAL MODIFICATION FOR API-MONITOR AGENT: -->
     <!-- If this agent is api-monitor, the Report Body MUST be a structured diff containing:
@@ -852,6 +929,17 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
          3) Plan adherence check: planned-and-found, planned-and-missing, unplanned-additions
          4) Caller verification status for changed signatures
          5) Drift flags requiring architect attention -->
+
+    <!-- CRITICAL MODIFICATION FOR THE DESIGNATED VISUAL VERIFIER: -->
+    <!-- If this agent carries the visual verification duty (Phase 3) and the task altered a rendered UI,
+         the Report Body MUST contain a Visual Evidence block:
+         1) The evidence contract as fixed at Critic review (viewports, screens/states, reference design)
+         2) Capture manifest: before/after image paths under reports/ui-evidence/<date>-<task>/, per viewport
+         3) Pass/fail checklist results: visual hierarchy; clipped/overlapping/truncated elements; focus and
+            hover states; contrast/readability; per-viewport layout; reference-design match; adjacent-UI regression
+         4) Verdict: PASS | FAIL (fix_required, listing each failed check) | VISUAL: UNVERIFIED (with diagnosis,
+            failure-memory entry, and user-eyeball request)
+         5) Tooling failures: symptom, diagnosis, retry command — mirrored to .phanes/config.json failure memory -->
 
     ## Next Step   (Designate next agent if you wish to chain this as a workflow, or say submit for final review)
 ```

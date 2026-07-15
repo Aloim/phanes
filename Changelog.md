@@ -4,6 +4,15 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.2 — 2026-07-15
+
+### Added
+- **Self-version check (Phase 0, Step 0):** every run fetches the distribution repository's `phanes.md`, compares version stamps numerically, and refreshes every installed copy when upstream is newer — then stops with a verbatim re-run notice so no run ever executes a stale spec. The download is sanity-checked (a 404 page never clobbers a working install), a newer local copy is never downgraded, and an offline fetch degrades gracefully to a session-summary TODO.
+- **Installed-Capability Leverage (new §II principle):** every run inventories user-installed MCP servers, plugins, skills, slash commands, and non-Phanes agents, then wires *matched* capabilities three layers deep — per-agent least-privilege grants via a Phase 3 matching rubric, generated "Discovered servers" entries in each agent's MCP Usage Rubric, and a regenerated Installed Capability Register in the root CLAUDE.md. Everything discovered is a conditional enhancement ("if available" phrasing; no chain ever blocks on it); failures are diagnosed and remembered in `.phanes/config.json` for later runs. Phanes never installs, uninstalls, or reconfigures what the user set up.
+- **Visual Evidence Mandate (new §II principle):** UI changes can no longer be approved by prose. Proposals must declare target viewports, affected screens/states, and the reference design (the Critic returns `fix_required` without the declaration); after apply, a designated visual verifier — a duty carried by an existing roster agent, preferring the frontend specialist, never new headcount — captures before/after evidence at the declared viewports and runs a mechanical pass/fail checklist (hierarchy, clipping, focus/hover states, contrast, per-viewport layout, reference match, adjacent-UI regression). Output is a flag, not a fix. Soft gate: absent or failing capture tooling is diagnosed, remembered across sessions, and surfaces as `VISUAL: UNVERIFIED` plus a user-eyeball request — never a silent pass.
+
+---
+
 ## v2.1.2 — 2026-07-11
 
 ### Added
