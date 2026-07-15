@@ -4,6 +4,13 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.2.1 — 2026-07-15
+
+### Added
+- **Frontend design skill in the pre-flight:** every run now ensures the official `frontend-design` plugin (`claude-plugins-official` marketplace) is installed — deliberate, non-templated visual design guidance that costs zero context until invoked, so the install carries no schema tax. Every generated agent carries the rule that UI- and frontend-related tasks begin by loading the skill via the Skill tool. Not mandatory: if the marketplace is unreachable or the install fails, the run records a TODO and continues, and agents treat the skill as a conditional enhancement ("if available") like every discovered capability. A fresh install arms on the next session, like the enforcement hooks.
+
+---
+
 ## v2.2 — 2026-07-15
 
 ### Added
