@@ -4,6 +4,21 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.3 — 2026-07-15
+
+### Added
+- **Bounded Fan-Out (new §II principle):** a hard width budget of 5 sub-agents in flight at once, tier-independent — scouts count against their spawner, parallel perspectives keep their 2–5 band. Wider sweeps are never hand-rolled: the harness's native large-scale orchestration (where one exists) is the sanctioned escalation path, recommended to the user and never invoked silently. Every session summary now records a fan-out ledger (sub-agents spawned per phase, peak in flight) so budget breaches are visible across runs.
+- **Compaction Survival (new §II principle):** every run keeps a run-progress ledger at `.phanes/run-progress` — one line per completed phase, opened in Phase 0, closed at the Phase 5 sign-off. An unclosed ledger at run start means a prior run died mid-flight; the new run resumes from the recorded phase instead of blindly restarting. And because long sessions compact lossily, a run that can no longer see a later phase's verbatim text re-reads the installed prompt from disk before proceeding — re-read, never recall.
+- **Dual-verdict Critic (R.A.C.R.S. amendment):** every Critic audit closes with two mandatory verdicts — spec compliance and quality, each an explicit pass or fix_required. A report missing either verdict is returned fix_required without content review, and the orchestrator never pre-judges findings on the Critic's behalf. Enforced in the chain design rules, the agent template's JSON contract, and the report template.
+- **Reference, don't paste (Context Injection Protocol, item 4):** injected material past ~2,000 tokens travels as a file path plus a structured brief, never as pasted content — handoff boundaries are where multi-agent chains silently lose context, and a reference read at the destination cannot be truncated by the sender's summarizing hand.
+- **`semble` is now a pre-flight install (fourth MCP server):** hybrid code search (BM25 + static embeddings, tree-sitter-aware chunking) so agents find the exact snippet instead of sweeping a module with grep and reading whole files — the largest single token sink in a run. Two tools of schema (`search`, `find_related`), CPU-only, no API key, no GPU, no external service, and it rides the `uv` the pre-flight already installs for Serena, so it adds no prerequisite. Indexes build on demand and re-index on file changes; there is no separate index step and no bootstrap-time cost. `semble` finds the code, Serena navigates it — the Phase 4 rubric keeps them distinct, and index-first is now the first rung of every agent's analysis ladder. It is the one MCP call a T1 task may make, and only to locate a genuinely unknown file. Failure degrades to Grep/Glob sweeps: costlier, never incorrect.
+- **Code-index slot discipline:** the Phase 3 matching rubric now treats the code-index slot as filled. A discovered code-index server (symbol-graph, repo-map, rival hybrid search) is granted only where it demonstrably beats `semble` for the project's stack, and where granted, `semble` is not granted to that agent — two servers doing one job is two schema taxes for one capability.
+
+### Changed
+- Model & Effort rubric re-reviewed 2026-07-15 (Haiku 4.5 / Sonnet 5 / Opus 4.8, unchanged assignments) and now records that per-sub-agent reasoning-effort control is not exposed by the harness — thinking directives remain the depth lever.
+
+---
+
 ## v2.2.1 — 2026-07-15
 
 ### Added

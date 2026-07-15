@@ -24,6 +24,7 @@ It is not a tool you install once and forget. It is a *re-runnable specification
 - [How to install](#how-to-install)
 - [Migrating an older install (⚠️ experimental)](#migrating-an-older-install-experimental)
 - [Companion tools](#companion-tools)
+- [Recommended third-party enhancements](#recommended-third-party-enhancements)
 - [Version](#version) · [License](#license) · [Contributing](#contributing)
 
 ---
@@ -32,7 +33,7 @@ It is not a tool you install once and forget. It is a *re-runnable specification
 
 When you run `/phanes` in a repo for the first time, the prompt drives Claude Code through a strict, multi-phase setup:
 
-1. **Pre-flight.** Installs the three MCP servers it benefits from: `context7` (live library documentation on demand), `deepwiki` (digest answers about external GitHub dependencies, so agents never pull dependency source into context), and, on the first run, `serena` (symbol-level code navigation) via `uv`, which it also installs if missing. These are enhancements, not hard dependencies; a failed install is logged as a TODO and the run continues degraded rather than halting. Exactly three, deliberately: MCP tool schemas cost context every session, so every generated agent carries a usage rubric stating when each server saves tokens and when to make no MCP call at all. Platform is detected first: bash on POSIX, PowerShell on Windows. Before any of that, the run checks itself: it fetches this repository's `phanes.md`, compares version stamps, refreshes every installed copy when a newer version has shipped, and stops with a re-run notice so no run executes a stale spec. It then inventories what you already have installed — MCP servers, plugins, skills, slash commands — and holds that inventory for least-privilege wiring into matched agents later in the run; nothing you installed is ever modified or removed. The pre-flight also ensures the official `frontend-design` skill is installed (skills cost no context until invoked), so UI and frontend tasks run with deliberate design guidance loaded — and every generated agent is instructed to load it for such tasks; if the install fails or the skill is unavailable, the run simply continues without it.
+1. **Pre-flight.** Installs the four MCP servers it benefits from: `context7` (live library documentation on demand), `deepwiki` (digest answers about external GitHub dependencies, so agents never pull dependency source into context), `semble` (hybrid code search — agents find the exact snippet they need instead of sweeping a module with grep and reading whole files), and, on the first run, `serena` (symbol-level code navigation) via `uv`, which it also installs if missing. These are enhancements, not hard dependencies; a failed install is logged as a TODO and the run continues degraded rather than halting. Exactly four, deliberately: MCP tool schemas cost context every session, so each server has to *remove* more context than its schema costs — `semble` is two tools of schema against the largest token sink in a run — and every generated agent carries a usage rubric stating when each server saves tokens and when to make no MCP call at all. Platform is detected first: bash on POSIX, PowerShell on Windows. Before any of that, the run checks itself: it fetches this repository's `phanes.md`, compares version stamps, refreshes every installed copy when a newer version has shipped, and stops with a re-run notice so no run executes a stale spec. It then inventories what you already have installed — MCP servers, plugins, skills, slash commands — and holds that inventory for least-privilege wiring into matched agents later in the run; nothing you installed is ever modified or removed. The pre-flight also ensures the official `frontend-design` skill is installed (skills cost no context until invoked), so UI and frontend tasks run with deliberate design guidance loaded — and every generated agent is instructed to load it for such tasks; if the install fails or the skill is unavailable, the run simply continues without it. Each run also keeps a run-progress ledger on disk (`.phanes/run-progress`), so a session that dies or compacts mid-bootstrap resumes from the last completed phase instead of restarting blind.
 2. **Repository comprehension.** Reads the README, source tree, configs, and CI to infer the project's *true* purpose, primary language, build system, and module boundaries. Extraneous directories (vendored deps, example packs, demo content) are filtered out.
 3. **Project memory infrastructure.** Scaffolds the substrate every sub-agent operates against:
    - `documentation/`: session summaries, plans, dated architecture snapshots, and a two-tier API registry (tier 1 generated, tier 2 curated annotations). Every folder carries a **generated `_index.md`**, so agents locate knowledge by descending indexes (a few hundred tokens) instead of scanning trees. Files respect a 500-line soft ceiling and are split-with-index when they outgrow it.
@@ -81,9 +82,11 @@ Think of `/phanes` as *refreshing Claude's knowledge of your project*: every run
 
 - **Procedure in scripts, judgment in prompts, and hooks at the harness layer.** Any rule a script can enforce (LOC limits, header stamps, registry edits, API diffs, doc ceilings) lives in `.phanes/scripts/`; the two settings.json hooks make the critical ones unskippable. Mechanical rules in prompts get forgotten under context pressure; scripts don't forget; hooks can't be forgotten.
 - **Single-writer per artifact.** Every registry tier, snapshot, and summary has exactly one writing agent, and so does every generated `_index.md` (`phanes doc-index` is their sole writer). Many readers, one writer.
-- **No direct code modification by sub-agents, at any tier.** Coding agents emit a report containing a proposed diff; a Critic reviews it; the Executor applies it. Review depth scales with tier; its presence is never waived. The primary Claude Code agent does not edit code directly either; it orchestrates.
+- **No direct code modification by sub-agents, at any tier.** Coding agents emit a report containing a proposed diff; a Critic reviews it; the Executor applies it. Review depth scales with tier; its presence is never waived. The primary Claude Code agent does not edit code directly either; it orchestrates. Every Critic review closes with two mandatory verdicts — spec compliance and quality — and a report missing either is returned unread.
 - **No UI approval by prose.** UI proposals declare target viewports and reference designs up front; after apply, a designated visual verifier captures before/after screenshots and runs an explicit pass/fail checklist. "Looks good" is not evidence. Where capture tooling is missing or broken, the failure is diagnosed, remembered for later sessions, and the result is marked visually unverified instead of silently passing.
 - **Context injection over context inheritance.** Sub-agents receive only the slice of context their tier permits, and pull bulky material through read-only scout digests instead of loading it raw. Pollution from sibling tasks is structurally impossible.
+- **Bounded fan-out.** Never more than 5 sub-agents in flight at once, whatever the harness permits. Genuinely wider sweeps are handed to the harness's native large-scale orchestration by recommendation to the user — never by an orchestrator silently multiplying its own fan-out. Every session summary records the run's fan-out ledger.
+- **Compaction survival.** Long sessions compact, and a summarized mandate is a forgotten mandate. Runs keep a phase-by-phase progress ledger on disk and resume from it after a mid-flight death; a run that can no longer see the spec's verbatim text re-reads it from disk instead of executing a lossy summary of itself.
 - **Index-first documentation navigation.** No agent bulk-reads `documentation/`: indexes are descended, targets loaded, nothing else.
 
 ---
@@ -250,9 +253,19 @@ Phanes is designed with modularity in mind: rather than growing the core file, c
 
 ---
 
+## Recommended third-party enhancements
+
+Phanes never installs these. The Phase 0 capability inventory discovers them if you have installed them yourself, and the Phase 3 matching rubric wires them into exactly the agents whose duties they serve — least privilege, fallback named, never a hard dependency. All verified actively maintained as of 2026-07-15; re-check before adopting. (Code search is *not* on this list because Phanes now installs `semble` itself in the pre-flight; a rival code-index server you already run is granted only where it beats `semble` for your stack, and then `semble` is not granted alongside it — one job, one schema tax.)
+
+- **Shell-output compressors** (e.g. RTK): a PreToolUse proxy that strips noise from build/test/git output before it reaches any agent's context (~89% average noise removal, measured 2026-07) while preserving errors and diffs in full. Benefits every agent that runs shell commands; needs no Phanes wiring at all.
+- **Usage monitors** (e.g. claude-hud, claude-monitor): live context-fill and rate-limit forecasting alongside long multi-agent runs. Purely observational, zero token cost — useful company for any Phanes bootstrap on a subscription plan.
+- **CLAUDE.md linters** (e.g. cclint): CI-side validation of the instruction files Phanes generates — deprecated model identifiers, broken imports, leaked keys.
+
+---
+
 ## Version
 
-Current: **v2.2.1** (2026-07-15). See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
+Current: **v2.3** (2026-07-15). See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
 
 ---
 

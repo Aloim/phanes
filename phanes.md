@@ -1,4 +1,4 @@
-<!-- Phanes v2.2.1 — 2026-07-15 — single-file bootstrap prompt.
+<!-- Phanes v2.3 — 2026-07-15 — single-file bootstrap prompt.
      Installed copies self-update: Phase 0 Step 0 checks this stamp against upstream on every run and refreshes the install when a newer version has shipped.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
@@ -53,7 +53,7 @@ These principles are stated **once**, here. Every later phase references them by
 * **Advanced Methodologies – The R.A.C.R.S. Cycle (Reason, Act, Critique, Reflect, Synthesize):**
 
   1. **Reason & Act (ReAct):** A primary agent analyzes the task and produces an output (report/proposal).
-  2. **Critique (CRITIC):** The output is **automatically** and **immediately** reviewed by a specialized, independent Critic Agent with deep domain expertise.
+  2. **Critique (CRITIC):** The output is **automatically** and **immediately** reviewed by a specialized, independent Critic Agent with deep domain expertise — fresh context, never the producer reviewing its own work. Every Critic audit **MUST** close with **two mandatory verdicts**: **spec compliance** (does the artifact do exactly what the assignment and active plan demanded?) and **quality** (is it production-tier by the standards of §II?), each an explicit `pass` or `fix_required`. A report missing either verdict is itself `fix_required` on arrival — returned without content review. The orchestrator **NEVER** pre-judges or filters findings on the Critic's behalf: the Critic sees the artifact, not the orchestrator's opinion of it.
   3. **Reflect (Reflexion):** The primary agent (or a new one) uses the Critic's audit to refine the work.
   4. **Synthesize (Consolidation):** An **Arbiter / Synthesizer** agent (the 'Orchestrator' archetype) **MUST** be invoked to consolidate all perspectives (primary, critic, and parallel agents), resolve conflicts, judge the proposed solutions, and produce the final, unified action plan. *The synthesized plan then receives one final Critic pass before it reaches the primary — the artifact that gets applied is always the artifact that was audited (see Phase 4 Chain Design Rules).*
      *Internalization:* Furthermore, **each sub-agent MUST implement an internal mini-R.A.C.R. loop** within its own prompt execution to self-check before returning.
@@ -63,6 +63,7 @@ These principles are stated **once**, here. Every later phase references them by
   1. **Select:** Identify only the essential context (files, previous reports, specific instructions) required for the task.
   2. **Summarize:** Condense the strategic objectives and the immediate goal.
   3. **Inject:** Pass the selected context and summary explicitly via invocation arguments *and/or a temporary context file referenced in the invocation*. The sub-agent's task definition must be self-contained.
+  4. **Reference, don't paste (hard rule):** injected material past ~2,000 tokens travels as a **file path plus a structured brief** (objective, constraints, where to look — a few hundred tokens), never as pasted content. Reports, plans, and diffs already live on disk — hand the path and let the sub-agent read exactly what it needs. Handoff boundaries are where multi-agent chains silently lose context; a reference read at the destination cannot be truncated by the sender's summarizing hand. Below the threshold, inline injection is fine — a path costs a read round-trip that tiny content does not earn.
 
   The tier system (Phase 2.5 Step 3) defines what context an agent *may* load; the Scout Pattern below defines *how* bulky context gets loaded — pull-by-digest instead of push-in-full.
 * **Delegated Retrieval (The Scout Pattern):** Sub-agents can spawn their own subagents. A specialist whose task requires ingesting bulky, one-time-use context (module surveys, registry sweeps, test output, log digging) **SHOULD** spawn a read-only *scout* subagent to fetch and digest it, spending its own context window on judgment only. Scout rules are absolute:
@@ -74,6 +75,8 @@ These principles are stated **once**, here. Every later phase references them by
 
   **Scout Cost Guard (non-negotiable):** Spawning a scout is never free — the scout pays its own system prompt and re-reads the material before saving anything. Spawn only when **ALL** of these hold: the material digests at ≥10:1 (test logs, module surveys, registry sweeps) and will not be needed verbatim later; the specialist has substantial work remaining to amortize the digest against; briefing the scout does not require injecting most of the specialist's own context. **Never** scout content you will later edit or quote — you will pay for the raw read anyway. Below ~2,000 tokens of raw material, always read directly. Exception: when loading raw material would force a tier promotion or exhaust the window, scout regardless — headroom outranks spawn overhead. Corollaries: scouts belong *early* in a long task, never in the final stretch; the highest-value scout is a Critic's verification run (50k tokens of test output → a 500-token verdict).
 * **Proactive Delegation & Early Verification:** Offload detail-oriented or uncertain subtasks to sub-agents **as early as possible**. Use specialized agents to verify facts, gather additional data, or explore alternatives at the planning stage, rather than burdening the main agent. This preserves main context capacity and catches potential issues or knowledge gaps sooner, improving overall reliability.
+* **Bounded Fan-Out (Concurrency Is a Budget):** Parallelism multiplies token spend linearly and synthesis overhead worse than linearly — the constraint on fan-out is never what the harness permits, always what the Synthesizer can consolidate and the session budget can absorb. Hard width budget: **no more than 5 sub-agents in flight at once**, tier-independent; parallel perspectives stay within their existing 2–5 band (§III). Scouts count against their spawner's budget, not the orchestrator's. When a task genuinely wants a wider sweep — a repo-wide audit, a many-dimension review — do **NOT** hand-roll it wider: recommend the harness's native large-scale orchestration feature to the user (where the harness ships one) as a conditional enhancement and let them decide; a zero-shot orchestrator that silently multiplies its own fan-out is how token budgets die. Every run's session summary records its **fan-out ledger** — sub-agents spawned per phase and the peak number in flight — so budget breaches are visible across runs, not just felt (Phase 5).
+* **Compaction Survival (Disk Does Not Compact):** Long sessions compact: the harness summarizes older context, and a summarized instruction is a lossy instruction — a compacted mandate is a forgotten mandate. This prompt lives on disk; disk does not compact. Two rules follow. **Ledger:** every phase boundary appends one line to `.phanes/run-progress` (phase completed → next phase, plus pending TODOs) — Phase 0 opens it, Phase 5 closes it; an unclosed ledger at run start means a prior run died mid-flight, and the new run **resumes from the recorded phase** instead of blindly restarting (Phase 0). **Re-read, never recall:** the moment you cannot see a later phase's *verbatim* text in your own context — the signature of compaction — **STOP recalling and re-read** the installed copy from disk (`.claude/commands/phanes.md`, or the project-level copy) before proceeding. Executing this spec from a compaction summary is executing a different, degraded spec.
 * **Installed-Capability Leverage (Conditional Enhancements Only):** Beyond what the Phase 0 pre-flights install themselves, every run **MUST** inventory what the user has already installed — MCP servers, plugins, skills, slash commands, pre-existing non-Phanes agents (Phase 0) — and match it against the project's *actual* needs from Phase 1. Wiring is never wholesale: a matched capability is granted per-agent under least privilege where the domain match earns its schema weight (Phase 3); an unmatched capability is simply not wired. Phanes **NEVER** installs, uninstalls, or reconfigures anything the user set up — discovery, not stewardship. Every discovered capability is a **conditional enhancement** exactly as Serena is: generated agent text phrases usage as "if available"; absence or failure degrades performance, never correctness; no chain ever blocks on a discovered tool. Skills cost nothing until invoked — reference them freely where they fit; MCP tool schemas cost context every session — grant them stingily. **Failure memory:** when a granted capability fails at use time, the failing agent diagnoses why, records it in `.phanes/config.json` (Phase 2.5 Step 4) and the session summary, and later runs read that memory before re-granting or retrying.
 * **Procedure in Scripts, Judgment in Prompts:** Any rule a script, hook, or linter can enforce **MUST** be a script in the Phanes script library (see Phase 2.5), invoked by sub-agents on demand — and, where the harness supports it, wired into Claude Code hooks so it *cannot* be skipped (Phase 2.5 Step 4b). Sub-agent prompts hold rules **only** for judgment work — design fit, structural choices, naming, style. Mechanical rules in prompts are forgotten under context pressure; scripts do not forget; hooks cannot be forgotten. **This principle is non-negotiable.**
 * **Single-Writer Per Artifact:** Each registry tier, session summary, architecture snapshot, or generated documentation file has exactly **one** sub-agent or script permitted to write to it. Many readers, one writer. This eliminates coordination overhead, makes drift detectable, and prevents conflicting writes. Scouts, being read-only by construction, preserve this discipline structurally.
@@ -214,19 +217,31 @@ IMPORTANT: **YOU MUST** not skip any steps. Follow all steps and infer best prac
    * You **MUST** then proceed with the full flow.
    * **Legacy migration:** If the existing installation was created by an earlier Phanes version (no version stamp anywhere; agents referencing `sequential-thinking` or an MCP `memory` server; mandatory-Serena protocols; per-subfolder CLAUDE.md sprawl; a second `Executor` archetype), **STOP and direct the user to run `/phanesupdate` first** (`PhanesUpdateExperimental.md`, published alongside this file — **EXPERIMENTAL: the user must have a full backup or remote push before running it, and must treat the migration as effectively irreversible once its branch is merged**) — it migrates the structure behind a generated, evidence-verified checklist while preserving all accumulated knowledge, then hands back to `/phanes` for regeneration. Do **not** improvise a partial migration inside a normal update run. *Exception:* when this update run was itself invoked **by** PhanesUpdate as its regeneration hand-off, proceed — scoped by the migration manifest.
 
+#### Run-Progress Ledger & Compaction Guard (Applies to all runs)
+
+This is **Compaction Survival** (§II) made mechanical.
+
+1. **Open the ledger:** ensure `.phanes/run-progress` exists (create `.phanes/` first if absent). If it already contains an unclosed prior run — lines but no `CLOSED` terminator — a previous run died mid-flight: report the recorded last-completed phase to the user, then **resume from the next phase**. Re-run the dead phase's verification checks before trusting its artifacts, and note the resume in the session summary. **NEVER** blindly restart a half-bootstrapped project.
+2. **Append at every phase boundary:** one line per completed phase — `<ISO date> | Phase <N> DONE → next Phase <M> | <pending TODOs, if any>`. One line, no prose; the ledger is a breadcrumb trail, not a report.
+3. **Compaction check at every phase boundary:** confirm you can still see the *verbatim* text of the next phase in context. If you cannot — compaction has occurred — re-read the installed copy from disk before executing the next phase. Per §II: re-read, never recall.
+4. **Close at Phase 5:** the sign-off appends `CLOSED — run complete` as the ledger's final line.
+
+**Token discipline:** the ledger costs one short append per phase; the compaction re-read fires only when compaction actually happened — and when it has, re-reading is the cheapest correct action available.
+
 #### Pre-flight Check: Model Context Protocol (MCP) Servers (Applies to all runs)
 
-**YOU MUST** attempt to access `context7`, `deepwiki`, and `serena` before attempting to add them. Take note of the permissions each requires.
+**YOU MUST** attempt to access `context7`, `deepwiki`, `serena`, and `semble` before attempting to add them. Take note of the permissions each requires.
 
 IMPORTANT: DO NOT EDIT THE .mcp.json directly!!
 
 * **Action 1:** Ensure `context7` is added (HTTP transport) — live, up-to-date documentation for external libraries, fetched on demand instead of pasted into context.
 * **Action 2:** Ensure `deepwiki` is added (HTTP transport — the hosted service; its legacy SSE transport is retired and returns 410). DeepWiki answers focused questions about **external GitHub dependencies** from pre-built wikis: three tools, digest-shaped answers, so agents understand a dependency without pulling its source into context.
 * **Action 3 (initial setup run only):** Serena is **not mandatory, but MUST be installed on the first run**: ensure `uv` is installed, then add the `serena` MCP. On update runs, verify Serena's presence but do not force-reinstall; if it was removed deliberately, respect that and note it in the session summary.
-* **Action 4:** Detect the platform **FIRST** and run only the matching variant below. PowerShell is a stated requirement on Windows — do **not** attempt the bash variant there.
-* **Action 5:** If `uv` is newly installed on POSIX, **YOU MUST** add its install path (`$HOME/.local/bin` and `$HOME/.cargo/bin`) to the user's shell profile (`.bashrc`/`.zshrc`) so it is in PATH for future runs. On Windows the uv installer updates the user PATH itself — only the *current session's* PATH needs the inline addition shown below.
+* **Action 4:** Ensure `semble` is added (user scope, per its published setup) — hybrid code search (BM25 + static embeddings, tree-sitter-aware chunking) that returns the exact snippets an agent needs instead of a grep-and-read sweep. **Two tools only** (`search`, `find_related`), CPU-only, no API key, no GPU, no external service; it rides the same `uv` this pre-flight already installs for Serena, so it adds no new prerequisite. Indexes build on demand, cache locally, and re-index automatically on file changes — there is **NO** separate index step to run and **NO** bootstrap-time cost to pay. Serena and `semble` are complements, not rivals, and the Phase 4 rubric keeps them apart: `semble` **finds** the code (natural-language or code query across a repo), Serena **navigates** it (symbols, references, renames once you know where you are).
+* **Action 5:** Detect the platform **FIRST** and run only the matching variant below. PowerShell is a stated requirement on Windows — do **not** attempt the bash variant there.
+* **Action 6:** If `uv` is newly installed on POSIX, **YOU MUST** add its install path (`$HOME/.local/bin` and `$HOME/.cargo/bin`) to the user's shell profile (`.bashrc`/`.zshrc`) so it is in PATH for future runs. On Windows the uv installer updates the user PATH itself — only the *current session's* PATH needs the inline addition shown below.
 * **Note:** `sequential-thinking` is **no longer installed**. Native extended thinking (the `think` / `think hard` / `ultrathink` directives embedded in agent definitions) replaces it entirely — one in-context reasoning pass instead of a tool round-trip per thought.
-* **Token discipline (why exactly these three):** every connected MCP server loads its full tool schemas into context each session — roughly 1,000 tokens per tool, paid whether the tools are used or not. Phanes installs exactly three small-schema, high-leverage servers and no others. **DO NOT** add large tool-count servers to a Phanes project by default — the GitHub MCP alone ships ~90 tools (~50k tokens of schema); the `gh` CLI does the same work at zero schema cost. Every generated agent carries the MCP Usage Rubric (Phase 4) so calls happen only where they *save* tokens.
+* **Token discipline (why exactly these four):** every connected MCP server loads its full tool schemas into context each session — roughly 1,000 tokens per tool, paid whether the tools are used or not. Phanes installs exactly four small-schema, high-leverage servers and no others; every one of them exists to *remove* tokens from context, and each earns its schema against that test. `semble` is the clearest case: two tools of schema against a discovery sweep that would otherwise cost a multi-file grep-and-read. **DO NOT** add large tool-count servers to a Phanes project by default — the GitHub MCP alone ships ~90 tools (~50k tokens of schema); the `gh` CLI does the same work at zero schema cost. A code-index server that ships a dozen-plus tools fails the same test — `semble` already holds this slot at two. Every generated agent carries the MCP Usage Rubric (Phase 4) so calls happen only where they *save* tokens.
 
 **POSIX (bash/zsh):**
 
@@ -235,6 +250,7 @@ command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sh && 
 claude mcp add --transport http context7 https://mcp.context7.com/mcp
 claude mcp add --transport http deepwiki https://mcp.deepwiki.com/mcp
 command -v uvx >/dev/null 2>&1 && claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$(pwd)"
+command -v uvx >/dev/null 2>&1 && claude mcp add semble -s user -- uvx --from "semble[mcp]" semble
 ```
 
 **Windows (PowerShell 5.1+ — note: `&&` chaining does not exist in 5.1; use the `if` forms verbatim):**
@@ -244,11 +260,12 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) { powershell -Execution
 claude mcp add --transport http context7 https://mcp.context7.com/mcp
 claude mcp add --transport http deepwiki https://mcp.deepwiki.com/mcp
 if (Get-Command uvx -ErrorAction SilentlyContinue) { claude mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --context ide-assistant --project "$PWD" }
+if (Get-Command uvx -ErrorAction SilentlyContinue) { claude mcp add semble -s user -- uvx --from "semble[mcp]" semble }
 ```
 
 **Graceful degradation — there is NO stop gate here.** Verify the MCP servers are working and accessible. If one is not:
 
-* Report exactly what failed and what capability is lost (`context7` → no live library docs; `deepwiki` → no dependency-wiki digests, agents fall back to context7 or targeted source reads; `serena` → agents fall back to file reads instead of symbol search).
+* Report exactly what failed and what capability is lost (`context7` → no live library docs; `deepwiki` → no dependency-wiki digests, agents fall back to context7 or targeted source reads; `serena` → agents fall back to file reads instead of symbol search; `semble` → agents fall back to Grep/Glob sweeps instead of indexed code search, which costs tokens but never correctness).
 * Record the failure and the retry command in the bootstrap session summary's TODO section.
 * **Continue the run.** Every generated agent treats these servers as conditional enhancements (see the Phase 4 template), so a missing server degrades performance, never correctness.
 
@@ -467,6 +484,7 @@ Required fields per summary:
 - Open TODOs carried forward
 - References (plans, snapshots, files touched)
 - Link to previous summary if continuing prior work
+- Fan-out ledger: sub-agents spawned per phase and the peak number in flight at once
 
 T1 tasks are recorded as one-line entries in the current session summary (what / why / files touched) — they do NOT get standalone reports.
 
@@ -712,6 +730,7 @@ CRITICAL: Ensure you seed the project root CLAUDE.md with instructions to follow
 3. You **MUST** codify these chained agent workflows for ALL key workflows which will see great benefit from a chained approach — in `.claude/workflows/` YAML. **The workflow files are the single source of truth for chain composition**; agent-file Next Task tables mirror them and yield to them on conflict.
 4. You **MUST** ultrathink while creating workflow chains: walk every chain end-to-end mentally, simulate where documentation might not be followed, where hallucinations may occur, where bad code might be written — and close those gaps before writing the files. This will inform you how to properly populate the Next Task / Next Agent table in every sub-agent definition file.
 5. For projects with a detected UI surface (Phase 1), `.claude/workflows/` **MUST** include a `ui-change` workflow codifying the Visual Evidence Mandate (§II) chain: `producer → Critic (diff review + evidence-contract enforcement) → [baseline capture by the designated visual verifier — T2/T3 only] → Executor applies → designated visual verifier (after-capture + pass/fail checklist — output is a flag, not a fix) → api-monitor (T2/T3 structural) → primary`. Checklist failures route `fix_required` back through the Reflect loop (fix → re-apply → re-capture). T1 UI tweaks get a single after-capture at the primary viewport, no baseline — review depth scales, presence never waives.
+6. Codified workflows respect **Bounded Fan-Out** (§II): no chain may put more than 5 sub-agents in flight at once. When a workflow's natural shape genuinely exceeds the budget — repo-wide audits, many-dimension sweeps — do **NOT** widen the chain: codify the in-budget version, and note in the workflow file that the harness's native large-scale orchestration feature (where the user's harness ships one) is the sanctioned escalation path — recommended to the user, never invoked silently.
    (Completion of these steps diligently will not only enable efficient teamwork but will also activate new emergent workflows and use cases on demand and will pay off more than you can imagine! Take pride in this work!)
 
 **NOTICE:** Remember your efforts right now are CRITICAL to the success or failure of this project and will pay off 10 fold throughout the course of this project! Now IS NOT the time to phone it in.
@@ -762,6 +781,7 @@ This is a **test-driven development (TDD)** workflow:
   2. Ensure color diversity for tracking (e.g., Blue + Red + Green agents)
   3. Document expected contribution of each agent to the synthesis phase
   4. Plan synthesis criteria in advance (how conflicting perspectives will be resolved)
+  5. Respect **Bounded Fan-Out** (§II): perspectives plus their scouts stay within the width budget — never more than 5 sub-agents in flight at once
 * **IMPERATIVE: Define Expert Critic Roles:** You **MUST** define dedicated Critic agents that provide highly actionable audit reports. Each Critic must:
 
   + Reference findings with unique IDs for tracking
@@ -778,7 +798,7 @@ This is a **test-driven development (TDD)** workflow:
   + Name must indicate both domain AND methodology (e.g., `go-performance-optimizer`, `security-audit-specialist`)
   + **MUST INCLUDE color field:** Each agent receives a color (Red, Blue, Green, Yellow, Purple, Orange, Pink, Cyan) which may repeat across different agent types but helps users visually track which agents are operating. Colors are for **human tracking only** — they are never a routing or selection criterion beyond tie-breaking visual diversity.
   + Naming Convention: lowercase, hyphens, 2-4 words, clearly indicating function, memorable (e.g., `go-grpc-specialist`).
-* **Tool Assignment (Least Privilege):** Explicitly list only the minimal tools required. Omit `tools` only if absolutely necessary; default access is too broad. **Minimize** `Edit`/`Write`. **For agents that interact with the registry/script library, ensure they have execution access to `.phanes/scripts/`. Where Serena is installed, grant it to analysis-heavy agents — symbol search before file reads. Grant `context7` and `deepwiki` to Planner/Architect, Analyzer, and scout-eligible agents only. Executor and Patch-Author get NO MCP tools and no agent-spawning tool — every tool an agent lists is schema weight its invocations pay for; an unlisted tool costs nothing.** **Discovered-capability grants (Installed-Capability Leverage, §II):** match the Phase 0 inventory against Phase 1 findings. Grant a discovered capability to an agent **ONLY** when **ALL** four hold: (a) the capability's domain overlaps the project's detected stack; (b) the receiving agent's archetype would call it in its normal duties; (c) the grant names its fallback in the agent's definition; (d) the server's schema mass is proportionate to the value delivered — a large-tool-count server (see the ~90-tool GitHub MCP caution in the pre-flight) is granted **ONLY** when no leaner path (CLI, script, targeted read) does the same work. Examples: browser/devtools MCP → the designated visual verifier in web projects; design-tool MCP → frontend agents where reference designs exist; game-engine MCP → engine-project specialists; database MCP → data-layer agents. Skills are referenced, not granted — they cost nothing until invoked; an agent that should invoke skills lists the Skill tool. Every agent whose duties touch UI or frontend work **MUST** list the Skill tool and load `frontend-design` for those tasks when it is installed (the pre-flight ensures it; absence is never a blocker). Executor and Patch-Author receive **NO** discovered capabilities — the existing rule stands unweakened.
+* **Tool Assignment (Least Privilege):** Explicitly list only the minimal tools required. Omit `tools` only if absolutely necessary; default access is too broad. **Minimize** `Edit`/`Write`. **For agents that interact with the registry/script library, ensure they have execution access to `.phanes/scripts/`. Where Serena is installed, grant it to analysis-heavy agents — symbol search before file reads. Grant `semble` to those same analysis-heavy agents, to architects, and to scout-eligible agents — indexed code search before any grep-and-read sweep; it is two tools of schema against the single largest token sink in a run, which is the easiest grant in this rubric to justify. Grant `context7` and `deepwiki` to Planner/Architect, Analyzer, and scout-eligible agents only. Executor and Patch-Author get NO MCP tools and no agent-spawning tool — every tool an agent lists is schema weight its invocations pay for; an unlisted tool costs nothing.** **Discovered-capability grants (Installed-Capability Leverage, §II):** match the Phase 0 inventory against Phase 1 findings. Grant a discovered capability to an agent **ONLY** when **ALL** four hold: (a) the capability's domain overlaps the project's detected stack; (b) the receiving agent's archetype would call it in its normal duties; (c) the grant names its fallback in the agent's definition; (d) the server's schema mass is proportionate to the value delivered — a large-tool-count server (see the ~90-tool GitHub MCP caution in the pre-flight) is granted **ONLY** when no leaner path (CLI, script, targeted read) does the same work. Examples: browser/devtools MCP → the designated visual verifier in web projects; design-tool MCP → frontend agents where reference designs exist; game-engine MCP → engine-project specialists; database MCP → data-layer agents. **The code-index slot is already filled:** `semble` (Phase 0) holds it, so a *discovered* code-index / code-search server (symbol-graph, repo-map, or rival hybrid-search server) is granted **ONLY** where it demonstrably beats `semble` for this project's stack — and where it is granted, `semble` is **NOT** granted to that same agent. Two servers doing one job is two schema taxes for one capability, and a dozen-plus-tool index server fails criterion (d) outright. Skills are referenced, not granted — they cost nothing until invoked; an agent that should invoke skills lists the Skill tool. Every agent whose duties touch UI or frontend work **MUST** list the Skill tool and load `frontend-design` for those tasks when it is installed (the pre-flight ensures it; absence is never a blocker). Executor and Patch-Author receive **NO** discovered capabilities — the existing rule stands unweakened.
 
 ---
 
@@ -802,6 +822,7 @@ Iteratively **GENERATE** each sub-agent's definition file based on the roster fr
    * **Serial chains terminate:** producer(s) → **Critic** → `api-monitor` (T2/T3 structural changes) → `primary`.
    * **Parallel-perspective chains terminate:** perspectives → **Synthesizer** → **Critic** → `api-monitor` (T2/T3) → `primary`. The final Critic audits the Synthesizer's consolidated plan, never the raw perspectives — the artifact that gets applied is always the artifact that was audited.
    * If a generated chain lacks a Critic, insert the nearest-matching Critic as the penultimate step before `primary`. This is non-negotiable — it holds even for T1 (lightweight diff review, per Phase 2.5 Step 3).
+   * Critic reports arrive carrying **both mandatory verdicts** — spec compliance and quality (§II R.A.C.R.S.) — or they do not arrive at all: a report missing either verdict is returned `fix_required` without content review. The orchestrator never pre-judges findings on the Critic's behalf.
    * Every chain that performs structural code change **MUST** include `api-monitor` as the post-Critic step for T2 and T3 tasks. Insert it automatically if the generated chain omits it. This is how tier 1 registry stays in sync with reality.
    * Every chain whose change alters a rendered UI **MUST** include the designated visual verifier as the post-Executor step — before `api-monitor` where both apply — per the Visual Evidence Mandate (§II). Insert it automatically if the generated chain omits it. A UI chain without captured evidence is as broken as a structural chain without `api-monitor`.
    * Colors never influence routing (Phase 3). Route on domain expertise and tool fit alone.
@@ -809,7 +830,7 @@ Iteratively **GENERATE** each sub-agent's definition file based on the roster fr
 
 #### Rubric: Model & Effort Selection
 
-> **Reviewed 2026-07-09 against: Haiku 4.5, Sonnet 5, Opus 4.8.** Model capabilities shift with every generation — on each update run, verify this rubric against the currently available models and revise it if stale. Do not trust an unreviewed rubric.
+> **Reviewed 2026-07-15 against: Haiku 4.5, Sonnet 5, Opus 4.8.** Model capabilities shift with every generation — on each update run, verify this rubric against the currently available models and revise it if stale. Do not trust an unreviewed rubric. Per-sub-agent reasoning-effort control is **not** exposed by the harness as of this review — depth is steered exclusively by the thinking directives below; re-check on harness updates.
 
 You **MUST** select each agent's `model` and thinking directive based on task complexity, balancing reasoning depth with cost:
 
@@ -851,9 +872,9 @@ You have delivered <key accomplishments> and are known for <specialty>.
 You **MUST** immediately
 - Problem Scoping: Confirm this pertains to the core project and not extraneous files/examples.
 - Triage Tier: Confirm whether this task is T1, T2, or T3 (see project CLAUDE.md). Load only the context that tier permits.
-- Gather Data: Open relevant files/logs. If the required raw material exceeds the Scout Cost Guard threshold (digests ≥10:1, not needed verbatim later, substantial work remaining), spawn a read-only scout and consume its digest instead. [Scout-eligible archetypes only.]
+- Gather Data: Open relevant files/logs. **When you do not already know which files matter, `semble search` is the first call — before Grep, before Read** (if installed; see the rubric). If the required raw material exceeds the Scout Cost Guard threshold (digests ≥10:1, not needed verbatim later, substantial work remaining), spawn a read-only scout and consume its digest instead. [Scout-eligible archetypes only.]
 - Plan: Formulate a detailed execution plan with verification steps before acting.
-- T2/T3 only: before ANY MCP call, consult the MCP Usage Rubric below — MCP is for when it SAVES context, never a reflex.
+- Before ANY MCP call, consult the MCP Usage Rubric below — MCP is for when it SAVES context, never a reflex. T1 makes **no** MCP calls, with exactly one exception: `semble` discovery when the target file is genuinely unknown — locating an unknown file is precisely where a Grep sweep costs most, and one indexed query is the cheapest way to end it.
 - Registry Reads (architect/designer agents only): Before designing any new API, run `phanes list-apis <module>` for affected modules and read `documentation/registry/tier2/<module>.md` annotations. If an existing API serves the need, use it — duplicates are forbidden.
 
 ## Specialized skills you bring to the team
@@ -878,13 +899,14 @@ You **MUST** immediately
 
 ### MCP Usage Rubric (token discipline)
 An MCP call is justified ONLY when it costs fewer tokens than the native alternative. **Default: a targeted Read/Grep under ~2,000 tokens beats any MCP call — make no call.**
-- **Serena** (if installed; T2/T3): symbol search / find-references when locating code across multiple files. NOT for: T1 fixes, files already in context, or content you will need in full anyway.
+- **semble** (if installed; all tiers — the sole MCP call T1 may make, and only to locate an unknown file): `search` when you do not yet know which files matter — a natural-language or code query returns the exact snippets instead of a Grep/Glob sweep plus full reads; `find_related` to pull code semantically similar to a known `file:line`. This is the **first** call of any discovery task, before Grep, before Read, before Serena. NOT for: files already in context, a path you already know (just Read it), or content you need in full anyway.
+- **Serena** (if installed; T2/T3): symbol search / find-references when locating code across multiple files — you know *where* you are and need the symbol graph. Reach for it **after** `semble` has found the region, not instead of it. NOT for: T1 fixes, files already in context, or content you will need in full anyway.
 - **context7** (T2/T3): up-to-date documentation for an external library whose behavior matters to this change. NOT for: language/stdlib basics, or anything the project's own registry and documentation tree already answer.
 - **deepwiki** (T2/T3; scout-eligible agents): architecture-level questions about an EXTERNAL GitHub dependency — call `read_wiki_structure` first, then ONE focused question; consume the digest. NOT for: this project's own code (NEVER — the registry and documentation tree own that), or trivia a single file read settles.
 - **Discovered servers (this project — GENERATED from the Phase 0 inventory):** <one line per discovered server granted to THIS agent, in the exact format of the lines above: when it saves tokens, NOT-for cases, fallback. Omit this entry entirely when no discovered server is granted to this agent.>
 
 ### Operating protocol
-- **Symbol-first analysis (if Serena is installed)** – use symbol search before file reads to minimize token usage; fall back to targeted file reads otherwise.
+- **Index-first, then symbol-first analysis** – when the target files are unknown, `semble search` before anything else (if installed); then Serena symbol search before file reads (if installed); fall back to targeted Grep/Read only when neither is available. A grep-and-read sweep across an unfamiliar module is the single most expensive habit an agent has — every rung of this ladder exists to avoid it.
 - **Full-context check** – request missing info instead of hallucinating.
 - **YOU MUST** create actionable reports to complete your task (T1: a one-line summary for the session log suffices — see tier documentation weights).
 - **TEAMWORK** – Communicate next steps to Primary Agent if necessary.
@@ -895,10 +917,11 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
 - **Documentation discipline** – any doc you write respects the 500-line soft ceiling and carries both DOC header lines; NEVER bulk-read `documentation/` — descend the `_index.md` indexes and load only the target files (scouts included); never hand-edit an `_index.md` — run `phanes doc-index`.
 - **Frontend design skill** – any UI- or frontend-related task begins by loading the `frontend-design` skill via the Skill tool, if installed; when unavailable, proceed without it and note the absence in your report. Unstudied, template-default visual choices are what this rule exists to prevent.
 - **Visual verification duty** – [designated visual verifier only — omit for every other agent] after the Executor applies a UI diff, capture evidence at the declared viewports into `reports/ui-evidence/<date>-<task>/` (T2/T3 additionally require the pre-apply baseline capture), then run the pass/fail checklist: visual hierarchy intact; no clipped, overlapping, or truncated elements; focus and hover states present; contrast/readability; correct layout at each declared viewport; match against the declared reference design; regression scan of adjacent UI. Output is a flag, not a fix. Tooling absent, failing, or returning empty frames → diagnose why, record the diagnosis in `.phanes/config.json` failure memory plus a session-summary TODO with a user-eyeball request, and mark `VISUAL: UNVERIFIED` — never a prose pass, never a silent pass.
-- Emit **exact JSON**:
+- Emit **exact JSON** (the `verdicts` key is emitted by Critic archetypes only — every other agent omits it):
    {
      "report_path": "<relative/path/to/report.md>",
      "summary": "<one-sentence outcome>",
+     "verdicts": { "spec_compliance": "pass | fix_required", "quality": "pass | fix_required" },
      "next_agent": "<agent-name | final | fix_required>",
      "next_task": "<task-name>",
      "confidence": "high" | "low",
@@ -934,7 +957,10 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
             affected screens/states, and reference design — return fix_required if the declaration is
             missing. Prose claims ("looks good", "renders correctly") are NOT evidence; only captured
             images or an explicit VISUAL: UNVERIFIED flag exist. Borderline or contested checklist
-            calls from the designated visual verifier route to you for judgment. -->
+            calls from the designated visual verifier route to you for judgment.
+         7) Two mandatory verdicts closing the report: spec compliance and quality, each pass or
+            fix_required (§II R.A.C.R.S.) — an audit missing either verdict is incomplete and will be
+            returned fix_required without content review. -->
 
     <!-- CRITICAL MODIFICATION FOR API-MONITOR AGENT: -->
     <!-- If this agent is api-monitor, the Report Body MUST be a structured diff containing:
@@ -973,6 +999,8 @@ The Phase 2.5 infrastructure is what makes this enforcement mechanical rather th
 ### Phase 5: DEEP BREATH, Increment Run Counter, Sign Off
 
 * Increment hidden .claude/.phanes file contents.
+* Close the run-progress ledger: append `CLOSED — run complete` to `.phanes/run-progress` (Compaction Survival, §II).
+* Record the run's **fan-out ledger** in the session summary — sub-agents spawned per phase and the peak number in flight at once (Bounded Fan-Out, §II).
 * **On an initial setup run — and on ANY run that created or repaired hook entries — you MUST close by telling the user (verbatim, do not paraphrase):**
 
   > "Setup complete. Claude Code snapshots hook configuration at session start — the enforcement hooks installed this run (`hook-stamp-guard`, `hook-size-check`) will only activate in your NEXT session. Please restart your Claude Code session now to arm them."
