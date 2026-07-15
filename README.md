@@ -150,7 +150,7 @@ Phanes is a single Markdown file (`phanes.md`), so installation just means putti
 - [Claude Code](https://claude.com/claude-code) installed and authenticated.
 - `git`, plus whichever language toolchain your project actually uses.
 - **Windows: PowerShell** (5.1 or newer, ships with Windows). The Phase 0 pre-flight runs its install commands through PowerShell there; POSIX systems use any standard shell.
-- Optional but strongly recommended: `uv` (for the `serena` MCP server). The Phase 0 pre-flight will install it for you if missing.
+- Optional but strongly recommended: `uv` (it runs both the `serena` and `semble` MCP servers). The Phase 0 pre-flight will install it for you if missing.
 
 ### Install as a user-level slash command (recommended)
 
