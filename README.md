@@ -52,7 +52,7 @@ The pre-flight detects your platform first and runs the matching commands: bash 
 
 - `documentation/` holds session summaries, plans, dated architecture snapshots, and a curated API registry. That registry captures the things code search cannot see, such as deprecations, contracts beyond the type signatures, and anti-patterns. The generated API surface itself lives outside the tree as a machine baseline in `.phanes/registry/`. Every folder carries a **generated `_index.md`**, so agents find knowledge by descending indexes, which costs a few hundred tokens, instead of scanning the whole tree. Files respect a soft ceiling of 500 lines and are split into an indexed folder when they outgrow it.
 - `tests/` holds `unit/`, `integration/`, `e2e/`, `fixtures/`, and `helpers/`, with a verbatim README and the same `phanes new-file` header-stamp discipline that `src/` uses.
-- `.phanes/scripts/` is a script library that owns every mechanical rule, from creating files with header stamps and checking line counts to auditing the documentation ceiling (`doc-check`), regenerating indexes (`doc-index`), regenerating the API baseline, diffing the API, and listing modules.
+- `.phanes/scripts/` is a script library that owns every mechanical rule, from creating files with header stamps and checking line counts to auditing the documentation ceiling (`doc-check`), regenerating indexes (`doc-index`), measuring the root files that load every session against their character budget (`register-check`), regenerating the API baseline, diffing the API, and listing modules.
 - `.claude/settings.json` holds the hooks that enforce mechanical rules at the harness layer. A blocking PreToolUse guard denies creation of any unstamped new file, and an advisory PostToolUse check runs size and documentation audits on every write. Prompts forget under context pressure. Hooks cannot.
 - `.phanes/config.json` records the confirmed module list, language, build system, and hook preferences.
 
@@ -223,14 +223,14 @@ The first run takes several minutes. It pauses to confirm a few choices, such as
 ```
 documentation/        # session summaries, plans, snapshots, curated registry; every folder indexed by a generated _index.md
 tests/                # unit, integration, e2e, fixtures, helpers
-.phanes/              # scripts (new-file, regen-registry, api-diff, loc-check, doc-check, doc-index, hook-*), config, and the generated API baseline (registry/)
+.phanes/              # scripts (new-file, regen-registry, api-diff, loc-check, doc-check, doc-index, register-check, hook-*), config, and the generated API baseline (registry/)
 .claude/agents/       # generated sub-agent definitions (6 to 10, deeply scoped)
 .claude/workflows/    # codified multi-agent workflows (YAML, the single source of truth for chaining)
 .claude/settings.json # merged hook entries: hook-stamp-guard (blocking) plus hook-size-check (advisory)
 .claude/template/     # report.md template used by every sub-agent
 .claude/.phanes       # run counter and install-state marker (hidden)
 CLAUDE.md             # root: primary-agent mandates; module roots: folder-specific guidance
-CLAUDE.local.md       # live register of projects in motion (gitignored by convention)
+CLAUDE.local.md       # live register of projects in motion; status and pointers only, 35k/40k char budget (gitignored by convention)
 ```
 
 The default `.gitignore` shipped with this repository excludes `.claude/`, `.phanes/`, and other runtime artifacts. Adjust it to taste in your own project.
@@ -284,7 +284,7 @@ Phanes never installs these. The Phase 0 capability inventory discovers them onl
 
 ## Version
 
-Current: **v2.4** (2026-07-16). This release flattens the registry into a curated registry plus a machine API baseline. See the version stamp at the top of `phanes.md` for the exact version. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
+Current: **v2.5** (2026-07-17). This release puts the root files that load every session on a character budget: the register holds status and pointers only, completed entries become short archive digests written by a haiku archivist, and a new register-check script plus the existing size hook surface any breach the moment it happens. See the version stamp at the top of `phanes.md` for the exact version. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
 
 ---
 

@@ -4,6 +4,18 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.5 — 2026-07-17
+
+### Added
+- **Hot-file budget: the always-loaded root files get a size discipline.** A real v2.3 install's `CLAUDE.local.md` register reached 149 KB (~38k tokens) of auto-loaded context — mostly completed-project narrative duplicating session summaries, written there because the register is the one file the next session is guaranteed to see. Storage is now classified by **context temperature** (§II Documentation Anti-Bloat): hot (auto-loaded — character budget), warm (tier-loaded — the 500-line ceiling), cold (deliberately navigated — bounded per file at birth). Growth is permitted only where context is not paid.
+- **The register mandate gains mechanics** (Phase 2): ≤10-line entries (status marker + pointer lines), a binding routing rule (narrative → session summary; procedure → plans; durable facts → registry/architecture; the register gets the pointer), close-out archival in the same change set, and standing blockers (🛑) as a measured crop-exemption class written as trigger + rule + pointer in ≤3 lines.
+- **`phanes register-check` (new script) + `hook-size-check` extension:** both hot files measured in characters on every edit — `OK` below 35,000, `SOFT-BREACH` to 40,000, `CROP-REQUIRED` above; completed-but-unarchived entries and the 🛑 section's size are reported too. api-monitor's report carries the status line as an end-of-chain observation; the register's single writer stays the primary.
+- **The Cropping Operation:** a T1 documentation task — archive every ✅ entry, then compress the oldest low-activity 🟡 entries to pointer form (displaced facts written to their plan or session summary first, so the crop deletes copies, never knowledge), re-measure until below the soft limit. 🛑 entries and the active project's current step are never cropped. Update runs execute it as the first post-run task when they find a CROP-REQUIRED register.
+- **Archive digests, condensed at the boundary:** closed register entries land in `documentation/archive/projects/<slug>.md` as ≤15-line template digests written by the Cleaner archetype's new `archivist` duty (sole writer, `haiku`-eligible — mechanical condensation). Plan paths and SS references are copied verbatim: they are the recovery paths, and the register is conventionally gitignored so git history cannot be assumed to hold the original.
+- **Index rotation:** an `_index.md` grows one line per child forever — the one cold-storage read that accumulates. Indexes now respect the 500-line ceiling; `phanes doc-index` rotates a crossing index mechanically (newest ~100 entries inline, older entries collapsed into range lines pointing to a frozen `_index_archive.md`). Content files never move; pointer stability is why rotation happens at the index layer only.
+
+---
+
 ## v2.4 — 2026-07-16
 
 ### Changed
