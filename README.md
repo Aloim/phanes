@@ -265,7 +265,7 @@ Phanes never installs these. The Phase 0 capability inventory discovers them if 
 
 ## Version
 
-Current: **v2.4** (2026-07-16) — registry flattening: a curated registry plus a machine API baseline. See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
+Current: **v2.4** (2026-07-16) — registry flattening: a curated registry plus a machine API baseline. See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). Every superseded version is archived verbatim in [`older version/`](older%20version/).
 
 ---
 
