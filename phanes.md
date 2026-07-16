@@ -1,4 +1,4 @@
-<!-- Phanes v2.3 — 2026-07-15 — single-file bootstrap prompt.
+<!-- Phanes v2.4 — 2026-07-16 — single-file bootstrap prompt.
      Installed copies self-update: Phase 0 Step 0 checks this stamp against upstream on every run and refreshes the install when a newer version has shipped.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
@@ -79,8 +79,8 @@ These principles are stated **once**, here. Every later phase references them by
 * **Compaction Survival (Disk Does Not Compact):** Long sessions compact: the harness summarizes older context, and a summarized instruction is a lossy instruction — a compacted mandate is a forgotten mandate. This prompt lives on disk; disk does not compact. Two rules follow. **Ledger:** every phase boundary appends one line to `.phanes/run-progress` (phase completed → next phase, plus pending TODOs) — Phase 0 opens it, Phase 5 closes it; an unclosed ledger at run start means a prior run died mid-flight, and the new run **resumes from the recorded phase** instead of blindly restarting (Phase 0). **Re-read, never recall:** the moment you cannot see a later phase's *verbatim* text in your own context — the signature of compaction — **STOP recalling and re-read** the installed copy from disk (`.claude/commands/phanes.md`, or the project-level copy) before proceeding. Executing this spec from a compaction summary is executing a different, degraded spec.
 * **Installed-Capability Leverage (Conditional Enhancements Only):** Beyond what the Phase 0 pre-flights install themselves, every run **MUST** inventory what the user has already installed — MCP servers, plugins, skills, slash commands, pre-existing non-Phanes agents (Phase 0) — and match it against the project's *actual* needs from Phase 1. Wiring is never wholesale: a matched capability is granted per-agent under least privilege where the domain match earns its schema weight (Phase 3); an unmatched capability is simply not wired. Phanes **NEVER** installs, uninstalls, or reconfigures anything the user set up — discovery, not stewardship. Every discovered capability is a **conditional enhancement** exactly as Serena is: generated agent text phrases usage as "if available"; absence or failure degrades performance, never correctness; no chain ever blocks on a discovered tool. Skills cost nothing until invoked — reference them freely where they fit; MCP tool schemas cost context every session — grant them stingily. **Failure memory:** when a granted capability fails at use time, the failing agent diagnoses why, records it in `.phanes/config.json` (Phase 2.5 Step 4) and the session summary, and later runs read that memory before re-granting or retrying.
 * **Procedure in Scripts, Judgment in Prompts:** Any rule a script, hook, or linter can enforce **MUST** be a script in the Phanes script library (see Phase 2.5), invoked by sub-agents on demand — and, where the harness supports it, wired into Claude Code hooks so it *cannot* be skipped (Phase 2.5 Step 4b). Sub-agent prompts hold rules **only** for judgment work — design fit, structural choices, naming, style. Mechanical rules in prompts are forgotten under context pressure; scripts do not forget; hooks cannot be forgotten. **This principle is non-negotiable.**
-* **Single-Writer Per Artifact:** Each registry tier, session summary, architecture snapshot, or generated documentation file has exactly **one** sub-agent or script permitted to write to it. Many readers, one writer. This eliminates coordination overhead, makes drift detectable, and prevents conflicting writes. Scouts, being read-only by construction, preserve this discipline structurally.
-* **Documentation Anti-Bloat & Index-First Navigation:** Documentation is only useful if an agent can load the relevant slice without drowning. Every agent-authored documentation file carries a doc-discipline header whose first line is its one-line description; every folder under `documentation/` carries a **GENERATED** `_index.md`, built from those description lines by `phanes doc-index` — the script is the **SOLE WRITER** of every index, and hand-editing an index is **FORBIDDEN**. Indexing never depends on perfect compliance: files lacking a DOC line are still indexed via fallback (first heading, then filename). Living documents respect a soft ceiling of 500 lines (deliberately the same number as the 500 LOC source threshold — the whole system has exactly one size number to remember); a file that outgrows the ceiling is split into a same-named folder of focused topic files. Frozen history — session summaries, past-dated snapshots, `archive/` — is **NEVER** edited to conform (see Phase 2.5 Step 2b). Consumers **NEVER** bulk-read or glob-scan `documentation/`: read the folder's `_index.md`, pick the entry, recurse, load only the target file(s). Locating knowledge must cost index reads — tens of tokens per hop, logarithmic in file count — never tree scans. Mechanics in Phase 2.5 Step 2b. A bloated documentation file or a stale index is a drift event of the same class as registry drift.
+* **Single-Writer Per Artifact:** Each registry file, API-baseline slice, session summary, architecture snapshot, or generated documentation file has exactly **one** sub-agent or script permitted to write to it. Many readers, one writer. This eliminates coordination overhead, makes drift detectable, and prevents conflicting writes. Scouts, being read-only by construction, preserve this discipline structurally.
+* **Documentation Anti-Bloat & Index-First Navigation:** Documentation is only useful if an agent can load the relevant slice without drowning. Every agent-authored documentation file carries a doc-discipline header whose first line is its one-line description; every folder under `documentation/` carries a **GENERATED** `_index.md`, built from those description lines by `phanes doc-index` — the script is the **SOLE WRITER** of every index, and hand-editing an index is **FORBIDDEN**. Indexing never depends on perfect compliance: files lacking a DOC line are still indexed via fallback (first heading, then filename). Living documents respect a soft ceiling of 500 lines (deliberately the same number as the 500 LOC source threshold — the whole system has exactly one size number to remember); a file that outgrows the ceiling is split into a same-named folder of focused topic files. Frozen history — session summaries, past-dated snapshots, `archive/` — is **NEVER** edited to conform (see Phase 2.5 Step 2b). Consumers **NEVER** bulk-read or glob-scan `documentation/`: read the folder's `_index.md`, pick the entry, recurse, load only the target file(s). Locating knowledge must cost index reads — tens of tokens per hop, logarithmic in file count — never tree scans. Mechanics in Phase 2.5 Step 2b. A bloated documentation file or a stale index is a drift event of the same class as API-baseline drift.
 * **Expert Personality Integration:** Prior to agent creation, embody the following personas:
 
   + A **Repository Context Expert** who determines the true purpose of the project by analyzing `README`, documentation, and core source files
@@ -120,7 +120,7 @@ The "No Direct Code Modification" policy ensures that sub-agent outputs are conf
 > 5. Always conclude with the terminal quality gate, in this exact order: Synthesizer (only when parallel perspectives were used) → Critic → designated visual verifier (post-apply, UI-touching changes only) → api-monitor (T2/T3 structural changes) → primary. The final Critic audits the *consolidated* output — never raw perspectives.
 > 6. Employ Git-based checkpoints like `git checkout -b claude-session-[timestamp]-[purpose]` for version control of thought processes
 > 7. **Critical:** Ensure agent outputs are trackable with unique IDs when issues are identified
-> 8. For T2/T3 tasks, the chain MUST end with `api-monitor` to verify registry tier 1 stays in sync with reality.
+> 8. For T2/T3 tasks, the chain MUST end with `api-monitor` to verify the API baseline (`.phanes/registry/`) stays in sync with reality.
 > 9. Specialists may spawn read-only scout subagents per the Scout Pattern and its Cost Guard (see the project CLAUDE.md summary of §II); scouts retrieve and digest, never judge, never write.
 > 10. UI-touching tasks follow the **Visual Evidence Mandate** (§II): the proposal declares viewports, screens/states, and reference design; the Critic enforces the declaration; the designated visual verifier captures and checklist-verifies the applied result before the chain closes. Prose is never evidence. Any UI or frontend task is performed with the `frontend-design` skill loaded (Skill tool) when it is installed; when it is not, proceed without it — the skill is a conditional enhancement, never a gate.
 
@@ -133,13 +133,13 @@ The following archetypes form the basis of the AI team. You will expand these in
 | Archetype | Trigger Cue (Natural Language) | Typical Output Directory | Purpose |
 | --- | --- | --- | --- |
 | Analyzer | "analyze", "review", "deep dive" | `reports/` | Surfaces hidden issues; deep analysis. |
-| Planner | "plan", "road-map", "strategy" | `docs/` | High-level task outlines and strategic planning. **Architect/designer specialization is the SOLE WRITER of registry tier 2 and architecture snapshots (see Phase 2.5).** |
+| Planner | "plan", "road-map", "strategy" | `docs/` | High-level task outlines and strategic planning. **Architect/designer specialization is the SOLE WRITER of the registry (curated annotations) and architecture snapshots (see Phase 2.5).** |
 | Validator | "validate", "compliance", "lint" | `reports/` | Standard/policy conformance checks. |
 | Critic | "critique", "audit output", "review quality" | `reports/` | Expert qualitative review, QA, and actionable feedback. |
 | Optimizer | "optimize", "improve", "refactor" | `reports/` or `output/` | Performance, efficiency, and maintainability gains. |
 | Integrator | "integration", "consolidate" | `docs/` or `reports/` | Synthesizes and consolidates multi-agent findings. |
 | Patch-Author | (Invoked by Orchestrator post-synthesis) | `output/` | Generates sequenced, executable change sets (e.g., patch files) from the synthesized, Critic-approved plan. Does **not** apply them. |
-| Monitor | "monitor", "watch", "test outcomes" | `reports/` | Ensures post-execution health and stability. **Specialized variant `api-monitor` is the SOLE WRITER of registry tier 1 (see Phase 2.5).** |
+| Monitor | "monitor", "watch", "test outcomes" | `reports/` | Ensures post-execution health and stability. **Specialized variant `api-monitor` is the SOLE WRITER of the API baseline (see Phase 2.5).** |
 | Cleaner | "cleanup", "maintain", "index docs" | `reports/` / `docs/` | Prevents clutter; maintains documentation hygiene. **Runs `phanes doc-check` and flags files breaching the anti-bloat ceiling (see Phase 2.5 Step 2b).** |
 | Executor | "apply", "finalize", "edit" | `src/` / `*/` | Applies approved diffs created by sub-agents following approval by a Critic agent. **MUST use `phanes new-file` for all new file creation (see Phase 2.5).** |
 
@@ -331,8 +331,9 @@ REMINDER: **YOU MUST** not skip any steps. Follow all steps and infer best pract
    * CI/CD pipelines indicating build patterns
    * `.gitignore` to understand excluded content
    * **Primary language(s) and build system** — required for Phase 2.5 script generation (TypeScript/tsc, C#/Unity, Python, Rust, Move, mixed)
-   * **Module boundaries** — your best inference of how the codebase splits; needed for Phase 2.5 registry slicing **and for CLAUDE.md placement (Phase 2)**
+   * **Module boundaries** — your best inference of how the codebase splits; needed for Phase 2.5 baseline slicing **and for CLAUDE.md placement (Phase 2)**
    * **UI surface** — whether the project renders a user-facing interface (web frontend framework, game engine, desktop toolkit) and which module owns it; required for the Visual Evidence Mandate (§II) wiring in Phases 3–4. A project with no rendered UI generates none of that wiring.
+   * **API surface** — whether the project exposes a network-facing API (HTTP/REST, GraphQL, gRPC) and where its public contract is declared (an OpenAPI/Swagger document, a GraphQL SDL, `.proto` files, or the route/handler definitions themselves); required for baseline extraction in Phase 2.5 Step 4. For a project whose product **is** an API, this declared contract — **not** the internal exported symbols — is the surface that must not drift silently, and `regen-registry` extracts it accordingly. A project with no network-facing API uses symbol extraction alone and generates none of this wiring.
 2. **Repository Context Expert Persona Activation:**
 
    * "As a Senior Project Archaeologist with 15 years of experience, I examine project DNA through documentation, code structure, and development patterns to determine the true purpose"
@@ -421,12 +422,11 @@ documentation/
 │   └── <YYYY-MM-DD>_initial/
 │       ├── overview.md
 │       └── modules/
-└── registry/
-    ├── tier1/                          # generated, do not hand-edit
-    │   └── README.md
-    └── tier2/                          # curated annotations
-        └── README.md
+└── registry/                          # curated annotations, one file per module
+    └── README.md
 ```
+
+**Registry layout migration (installs created by v2.0–v2.3):** if `documentation/registry/tier1/` or `documentation/registry/tier2/` exists, this update run **MUST** migrate the layout: (1) in this step, move every `tier2/<module>.md` up to `documentation/registry/<module>.md` **byte-identical** — curated annotations are preserve-class knowledge; verify with `git diff` that only paths changed, never content — and replace the two tier READMEs with the Step 2 registry README; (2) leave `tier1/` in place until Step 6 has run `phanes regen-registry` against the updated script — once the API baseline exists at `.phanes/registry/`, delete `documentation/registry/tier1/` entirely: generated content is regenerate-class (regeneration is its normal lifecycle; nothing is lost); (3) Step 6's closing `phanes doc-index` re-covers the new layout; (4) record the migration in the session summary. This is a folder move plus a regeneration — it does **NOT** require `/phanesupdate`.
 
 #### Step 1b: Test Directory Scaffolding
 
@@ -514,34 +514,28 @@ Snapshot levels (two levels — high and low; mid-level intentionally omitted to
 Single writer: architect/designer archetype sub-agent.
 ```
 
-**`documentation/registry/tier1/README.md`:**
+**`documentation/registry/README.md`:**
 ```
-Tier 1 registry: GENERATED API surface.
+The registry: CURATED API annotations.
 
-Generated by the project's api-monitor sub-agent via `phanes regen-registry`.
-Hand-editing FORBIDDEN — regenerate to update.
-
-Reflects exported APIs as of the last api-monitor run. Files are organized per module.
-
-Single writer: api-monitor archetype sub-agent.
-Readers: any sub-agent. Architect/designer agents MUST read tier 1 before designing any new API.
-```
-
-**`documentation/registry/tier2/README.md`:**
-```
-Tier 2 registry: CURATED API annotations.
-
-Hand-maintained by architect/designer archetype sub-agents. Contents:
+Hand-maintained by architect/designer archetype sub-agents, one file per module. Contents:
 - Deprecations
 - "Use X instead" redirects
 - Contracts beyond type signatures (null-vs-throw, ordering guarantees, idempotency, etc.)
 - Anti-patterns specific to a module
 - "Do not extend Y, instead extend Z" architectural directives
 
-Target ceiling: 30 entries per module file. If a module's tier 2 grows past 30, the architecture has drifted and warrants a snapshot review.
+The registry records what code search cannot see: intent, prohibition, and contract. The API
+surface itself is NOT stored here — query it live (`semble search` where installed,
+`phanes list-apis <module>` always). The generated API baseline in `.phanes/registry/` is
+api-monitor's diff substrate, not agent reading material.
+
+Target ceiling: 30 entries per module file. If a module's file grows past 30, the architecture
+has drifted and warrants a snapshot review.
 
 Single writer: architect/designer archetype sub-agent.
-Readers: any sub-agent. Architect/designer agents MUST read tier 2 for affected modules before producing a plan.
+Readers: any sub-agent. Architect/designer agents MUST read the affected modules' registry
+files before producing a plan.
 ```
 
 #### Step 2b: Documentation Anti-Bloat Discipline & Index-First Navigation
@@ -564,16 +558,16 @@ Documentation that nobody can load selectively is documentation that poisons con
 **Rules:**
 
 * **Soft ceiling: 500 lines per living documentation file** — deliberately the same number as the 500 LOC source threshold, so the whole system has exactly **one** size number to remember. The ceiling is soft — a 520-line file with one coherent topic beats two fragmented files — but any file past it **MUST** be flagged by `phanes doc-check` and either justified in a report or split.
-* **Generated indexes — the navigation backbone.** Every folder under `documentation/` carries an `_index.md`: one line per child — filename plus the question it answers, extracted from each file's DOC line; subfolders contribute their own index's first line. These indexes are **GENERATED by `phanes doc-index`**, which is their **SOLE WRITER**. Hand-editing an index is **FORBIDDEN** — regenerate to update, exactly as with registry tier 1. This is not stylistic: if every agent that adds a file also hand-edited the folder index, the index would have many writers — violating Single-Writer and guaranteeing drift. Index maintenance is mechanical; mechanical work belongs to a script.
+* **Generated indexes — the navigation backbone.** Every folder under `documentation/` carries an `_index.md`: one line per child — filename plus the question it answers, extracted from each file's DOC line; subfolders contribute their own index's first line. These indexes are **GENERATED by `phanes doc-index`**, which is their **SOLE WRITER**. Hand-editing an index is **FORBIDDEN** — regenerate to update, exactly as with the `.phanes/registry/` API baseline. This is not stylistic: if every agent that adds a file also hand-edited the folder index, the index would have many writers — violating Single-Writer and guaranteeing drift. Index maintenance is mechanical; mechanical work belongs to a script.
 * **Tolerant extraction — indexing never waits for compliance.** `doc-index` extracts each file's index line in fallback order: `DOC |` header line → first `#` heading → humanized filename. A file that predates the discipline (an older Phanes install, a hand-dropped file, a pre-hook write) is therefore indexed **without being edited** — it merely gets a lower-quality line until its single writer next touches it and adds a proper DOC line. Retro-editing files in bulk just to add headers is **FORBIDDEN**.
 * **Index-first navigation (binding on ALL documentation consumers, scouts included):** NEVER bulk-read or glob-scan `documentation/`. Read the folder's `_index.md`, pick the entry, recurse, load only the target file(s). Locating a fact costs 2–3 index reads (~200 tokens) plus one targeted file — logarithmic in file count, not linear. This is what makes the ceiling safe to enforce at all: splitting a file can never make knowledge harder to find. The rule is embedded verbatim in the root CLAUDE.md (Phase 2) and in every generated agent's operating protocol (Phase 4).
 * **The split procedure:** replace `<name>.md` with `<name>/` containing focused topic files, each carrying both header lines; run `phanes doc-index` to produce the folder's `_index.md`; update every inbound reference in the same change set — a dangling reference is a drift event.
 * **Folder growth:** when `plans/implementation/` or `plans/fixes/` exceeds ~8 entries, group them into `<module-or-topic>/` subfolders — a T1 documentation task; `doc-index` re-covers the new layout automatically. `architecture/` and `registry/` are already per-module. `session-summaries/` stays flat — filenames are self-describing — and its generated `_index.md` gives knowledge-fetching agents a one-line-per-session table of contents instead of a directory listing.
 * **Ownership respects Single-Writer:** the Cleaner archetype *detects* breaches (via `phanes doc-check`) and files a report; the file's designated single writer *executes* the split. Cleaner proposes, the writer disposes. A split is a T1 documentation task and flows through the standard review chain.
-* **The ceiling governs LIVING documents only — history is frozen.** Session summaries, dated architecture snapshot folders (once their date has passed), and `archive/` are **frozen artifact classes**: indexed via the fallback order, but never split, never retro-headered, never edited to conform. Editing history to satisfy a ceiling corrupts the very record the snapshot-decay discipline depends on. Living documents — active plans, tier 2 files, module docs, the snapshot currently being authored — respect the ceiling in full. A session summary that lands past the ceiling signals the *session* should have been split; note it in the summary's TODOs and move on.
+* **The ceiling governs LIVING documents only — history is frozen.** Session summaries, dated architecture snapshot folders (once their date has passed), and `archive/` are **frozen artifact classes**: indexed via the fallback order, but never split, never retro-headered, never edited to conform. Editing history to satisfy a ceiling corrupts the very record the snapshot-decay discipline depends on. Living documents — active plans, registry files, module docs, the snapshot currently being authored — respect the ceiling in full. A session summary that lands past the ceiling signals the *session* should have been split; note it in the summary's TODOs and move on.
 * **Lazy digestion — never bulk-convert.** When `doc-check` flags a pre-existing file (over-ceiling, missing DOC line), the fix is deferred to the next time that file's single writer legitimately touches it, executed as an ordinary T1 documentation task through the standard review chain. Bulk-rewriting accumulated knowledge to satisfy the discipline in one pass is **FORBIDDEN** — that is how knowledge gets corrupted at scale. Open flags live in the current session summary's TODOs until worked off.
 * **Adopted files.** A file inside `documentation/` that matches no known Phanes pattern (hand-dropped, pre-Phanes, human-authored) is **adopted**: indexed via fallback, exempt from ceiling and regeneration, flagged once in the session summary for user review. Phanes never deletes or rewrites what it did not create. Anything *outside* `documentation/` (a project's own `docs/`, a wiki export) is outside Phanes' jurisdiction entirely — untouched.
-* **Exemptions:** `registry/tier1/` (generated; `regen-registry` governs its shape) and `archive/` (frozen history) are exempt from both ceiling and indexing.
+* **Exemptions:** `archive/` (frozen history) is exempt from both ceiling and indexing. The generated API baseline needs no exemption — it lives outside `documentation/` entirely (`.phanes/registry/`, governed by `regen-registry`).
 * **Bootstrap seeding:** after Steps 5–7 have produced the initial documentation files, run `phanes doc-index` once to generate every initial index.
 
 #### Step 3: Tiered Workflow Definition
@@ -583,8 +577,8 @@ Sub-agents do not pay full ceremony for every task. **YOU MUST** record these ti
 | Tier | Trigger | Default loaded context | Sub-agents engaged | Documentation weight |
 |------|---------|------------------------|---------------------|----------------------|
 | **T1 — Quick fix** | Single-file change, bug fix, lint cleanup, isolated tweak. Must not touch exported API surface — if it does, promote to T2. | Architecture overview only; no module deep-dives | Primary + Critic (single lightweight diff review — no parallel perspectives, no Synthesizer) + Executor | One-line entry in the current session summary (what / why / files). No standalone report. |
-| **T2 — Feature work** | Feature or refactor within a single module | Architecture overview + that module's deep-dive + tier 1 slice for that module + tier 2 for that module + latest session summary | Primary + Planner/Architect + Executor + Critic + api-monitor | Standalone report(s) per the report template + session summary entry. |
-| **T3 — Cross-cutting** | Multi-module change, API change, migration, anything touching ≥2 modules | Architecture overview + all touched module deep-dives + tier 1 slices for all touched modules + tier 2 for all touched modules + active plan | Full chain including api-monitor invoked between phases | Plan in `documentation/plans/` + reports + session summary entry. |
+| **T2 — Feature work** | Feature or refactor within a single module | Architecture overview + that module's deep-dive + that module's registry file + latest session summary; API surface queried on demand (`semble search` where installed, `phanes list-apis` always), never preloaded | Primary + Planner/Architect + Executor + Critic + api-monitor | Standalone report(s) per the report template + session summary entry. |
+| **T3 — Cross-cutting** | Multi-module change, API change, migration, anything touching ≥2 modules | Architecture overview + all touched module deep-dives + registry files for all touched modules + active plan; API surface queried on demand (`semble search` where installed, `phanes list-apis` always), never preloaded | Full chain including api-monitor invoked between phases | Plan in `documentation/plans/` + reports + session summary entry. |
 
 **Review is universal; depth scales.** Per §III, no tier skips the Critic — T1's Critic pass is a single diff review, T3's is the full audit-report ceremony. Documentation weight scales the same way: the simpler the tier, the lighter the paper trail — but the trail always exists. UI-touching tasks at **every** tier additionally engage the designated visual verifier post-apply (Visual Evidence Mandate, §II) — the table's agent lists assume no rendered UI was touched.
 
@@ -607,15 +601,15 @@ Detect the project's primary language and build system from Phase 1 findings. Ge
 
 * **`phanes loc-check`** — scans tracked files, prints any over the soft threshold with line counts.
 
-* **`phanes doc-check`** — scans `documentation/` (excluding `archive/` and `registry/tier1/`) for **living** documents exceeding the 500-line doc ceiling or missing a DOC header line, for folders missing `_index.md`, and for indexes stale relative to their folder contents; prints offenders with line counts. Frozen artifact classes (Step 2b) are never flagged for content conformance. Consumed by the Cleaner archetype (Step 2b).
+* **`phanes doc-check`** — scans `documentation/` (excluding `archive/`) for **living** documents exceeding the 500-line doc ceiling or missing a DOC header line, for folders missing `_index.md`, and for indexes stale relative to their folder contents; prints offenders with line counts. Frozen artifact classes (Step 2b) are never flagged for content conformance. Consumed by the Cleaner archetype (Step 2b).
 
-* **`phanes doc-index`** — regenerates every `_index.md` under `documentation/` (excluding `archive/` and `registry/tier1/`). Extraction order per file: `DOC |` header line → first `#` heading → humanized filename — so files predating the discipline are indexed without being edited (Step 2b, Tolerant extraction). **SOLE WRITER of all indexes; hand-editing FORBIDDEN — regenerate to update.** Invoked automatically by `phanes new-file` for `docs` targets and by the `hook-size-check` hook whenever documentation files are touched, so indexes can never silently rot.
+* **`phanes doc-index`** — regenerates every `_index.md` under `documentation/` (excluding `archive/`). Extraction order per file: `DOC |` header line → first `#` heading → humanized filename — so files predating the discipline are indexed without being edited (Step 2b, Tolerant extraction). **SOLE WRITER of all indexes; hand-editing FORBIDDEN — regenerate to update.** Invoked automatically by `phanes new-file` for `docs` targets and by the `hook-size-check` hook whenever documentation files are touched, so indexes can never silently rot.
 
-* **`phanes regen-registry [module]`** — regenerates tier 1 registry from source. Use language-appropriate extractors (TypeScript: ts-morph or tsc API; C#: Roslyn analyzers; Python: `ast` module; Rust: `syn`; Move: ABI extraction; Go: `go/ast`). Optional module argument restricts to one slice. Output: per-module markdown files in `documentation/registry/tier1/<module>.md`.
+* **`phanes regen-registry [module]`** — regenerates the **API baseline** from source. Use language-appropriate extractors (TypeScript: ts-morph or tsc API; C#: Roslyn analyzers; Python: `ast` module; Rust: `syn`; Move: ABI extraction; Go: `go/ast`). Optional module argument restricts to one slice. Output: per-module machine-readable files in `.phanes/registry/<module>.json` (the script creates the folder). The baseline is api-monitor's diff substrate and `list-apis`' data source — it is **NOT** documentation: no agent reads these files directly, and it escapes every doc-discipline rule by living outside `documentation/` entirely. **Network-API projects (Phase 1 API-surface detection):** where the project exposes an HTTP/GraphQL/gRPC contract, the *public contract* is the surface that must not drift — internal exported symbols are not — so extract the baseline from the declared contract where one exists (OpenAPI/Swagger spec, GraphQL SDL, `.proto`), falling back to route/handler definitions where it does not, reading the extraction mode from the `.phanes/config.json` extractor configuration recorded in Phase 1. This lands as its own baseline slice (`.phanes/registry/<api-name>.json`) so `api-diff` flags a removed field or a changed response shape that symbol extraction alone would miss — a project whose product **is** the API takes this as its primary baseline; a project that merely *calls* external APIs generates no such slice.
 
-* **`phanes api-diff <since-ref>`** — diffs current API surface against a git ref or saved baseline. Outputs structured report: added, removed, changed signatures, with file references.
+* **`phanes api-diff <since-ref>`** — diffs the current API surface against a git ref or a saved baseline. For a git ref, extract the old surface from that ref's *source* — never depend on historical baseline files existing in git (`.phanes/` may be untracked). Outputs structured report: added, removed, changed signatures, with file references.
 
-* **`phanes list-apis <module>`** — prints tier 1 entries for one module to stdout. Sub-agents use this as a tool, **not** as a context dump. Calling `phanes list-apis` mid-task is cheap; loading the entire tier 1 registry into context is not.
+* **`phanes list-apis <module>`** — prints the API-baseline entries for one module to stdout. Sub-agents use this as a tool, **not** as a context dump. Calling `phanes list-apis` mid-task is cheap; loading the entire baseline into context is not.
 
 * **`phanes module-list`** — prints the configured module list (read from `.phanes/config.json`).
 
@@ -658,7 +652,7 @@ Generate two hook scripts in `.phanes/scripts/` (platform-appropriate — shell 
 }
 ```
 
-* **`hook-stamp-guard`** (blocking — exit code 2 denies the tool call): reads the tool-call JSON from stdin. If the target file does **not** yet exist, lives under a stamped tree (source modules, `tests/`, `documentation/`), and its content lacks the required header stamp → deny with the message: "New files must be created via `phanes new-file` — the stamp is the registry hook; bypassing it produces silent registry drift." All other calls pass (exit 0).
+* **`hook-stamp-guard`** (blocking — exit code 2 denies the tool call): reads the tool-call JSON from stdin. If the target file does **not** yet exist, lives under a stamped tree (source modules, `tests/`, `documentation/`), and its content lacks the required header stamp → deny with the message: "New files must be created via `phanes new-file` — the stamp is what `regen-registry` slices modules by; bypassing it produces silent API-baseline drift." All other calls pass (exit 0).
 * **`hook-size-check`** (advisory — always exit 0): runs `phanes loc-check` against touched source files; for touched documentation files it runs `phanes doc-index` (indexes regenerate on every doc write — they can never silently rot) followed by `phanes doc-check`; prints any warning into the transcript so the acting agent sees the breach immediately, in-context, at the moment it happens.
 
 **Activation caveat:** Claude Code snapshots hook configuration at session start — hook entries written during this run do **not** fire until the next session. Phase 5 informs the user that a restart is required to arm them; the bootstrap itself never depends on the hooks mid-run.
@@ -675,18 +669,18 @@ Generate `documentation/architecture/<today>_initial/`:
 
 * `modules/<module>/overview.md` per detected module — at minimum a stub with name, apparent purpose, key files. Stub-marked items are **TODOs for the architect agent**, not facts.
 
-#### Step 6: Initial Registry Population
+#### Step 6: Initial Registry & Baseline Population
 
-* Run `phanes regen-registry` to populate `tier1/` from current source.
-* Create empty `documentation/registry/tier2/<module>.md` files per detected module, each with a header explaining what entries belong there. **DO NOT** pre-fill — tier 2 grows only when an architect/designer sub-agent has real annotations to add. Pre-filling tier 2 with bootstrap guesses pollutes the most important anti-hallucination signal in the system.
+* Run `phanes regen-registry` to populate the API baseline at `.phanes/registry/` from current source.
+* Create empty `documentation/registry/<module>.md` files per detected module, each carrying the two DOC header lines (Step 2b) plus a one-line note of what entries belong there. **DO NOT** pre-fill — the registry grows only when an architect/designer sub-agent has real annotations to add. Pre-filling it with bootstrap guesses pollutes the most important anti-hallucination signal in the system.
 
 #### Step 7: Bootstrap Session Summary
 
 Write `documentation/session-summaries/SS00001_phanes-bootstrap_<date>.md`:
 
-* **What was done:** scaffolded folders, scripts, hooks, registry, initial snapshot, generated agent team.
+* **What was done:** scaffolded folders, scripts, hooks, registry stubs, API baseline, initial snapshot, generated agent team.
 * **Decisions taken:** confirmed module list, language, hook install state, agent roster.
-* **Open TODOs:** unclear module boundaries, deferred hook setup, MCP servers that failed pre-flight, registry holes, snapshot stubs needing fill-in.
+* **Open TODOs:** unclear module boundaries, deferred hook setup, MCP servers that failed pre-flight, baseline holes, snapshot stubs needing fill-in.
 * **References:** none (this is the first summary).
 
 #### Step 8: Sub-Agent Obligations Regarding This Infrastructure (Amends Phase 4)
@@ -701,15 +695,15 @@ Write `documentation/session-summaries/SS00001_phanes-bootstrap_<date>.md`:
 
 Specifically:
 
-* The **`api-monitor`** sub-agent (Monitor archetype, specialized) is the **SINGLE WRITER** of tier 1 registry. Its operating protocol **MUST** state: "Run `phanes regen-registry` after every phase of T2 and T3 work. Run `phanes api-diff <last-phase-ref>` to identify changes. Cross-check changes against the active plan's API-changes section. Verify callers of changed signatures were updated. Append a structured report to the active session summary. You do NOT edit code, plans, or architecture documents. Output is a flag, not a fix."
+* The **`api-monitor`** sub-agent (Monitor archetype, specialized) is the **SINGLE WRITER** of the API baseline (`.phanes/registry/`). Its operating protocol **MUST** state: "Run `phanes regen-registry` after every phase of T2 and T3 work. Run `phanes api-diff <last-phase-ref>` to identify changes. Cross-check changes against the active plan's API-changes section. Verify callers of changed signatures were updated. Append a structured report to the active session summary. You do NOT edit code, plans, or architecture documents. Output is a flag, not a fix."
 
-* The **architect/designer** archetype sub-agent is the **SINGLE WRITER** of tier 2 registry and architecture snapshots. Its operating protocol **MUST** state: "Before designing any new API, query tier 1 via `phanes list-apis <module>` for affected modules and read tier 2 annotations for those modules. If an existing API serves the need, use it — duplicates are forbidden. This is the single most important rule of your existence; tier 1+2 reads come before any planning output. For module surveys larger than the Scout Cost Guard threshold, spawn a read-only scout and consume its digest — spend your own window on design judgment, not on raw reading."
+* The **architect/designer** archetype sub-agent is the **SINGLE WRITER** of the registry and architecture snapshots. Its operating protocol **MUST** state: "Before designing any new API, search for an existing API that serves the need — `semble search` first where installed, `phanes list-apis <module>` as the always-available fallback — and read `documentation/registry/<module>.md` annotations for every affected module. If an existing API serves the need, use it — duplicates are forbidden. This is the single most important rule of your existence; the existing-API search and registry read come before any planning output. For module surveys larger than the Scout Cost Guard threshold, spawn a read-only scout and consume its digest — spend your own window on design judgment, not on raw reading."
 
 * The **Critic** archetype's operating protocol **MUST** state: "When verification requires executing tests or reproducing behavior, spawn a read-only scout to run and digest the output — a verdict with the failing cases and `file:line` references, not raw logs. Your window is for judgment on the digest."
 
-* The **Executor** archetype **MUST** state: "Use `phanes new-file` for ALL new file creation. Never create files by other means. The script is the registry hook — bypassing it produces silent registry drift (and the `hook-stamp-guard` will deny the attempt regardless)."
+* The **Executor** archetype **MUST** state: "Use `phanes new-file` for ALL new file creation. Never create files by other means. The header stamp is what `regen-registry` slices modules by — bypassing it produces silent API-baseline drift (and the `hook-stamp-guard` will deny the attempt regardless)."
 
-* All sub-agents **MUST** state: "Procedural work is delegated to Phanes scripts. Do not implement file size checks, registry edits, or signature diffs in your own reasoning — invoke the script."
+* All sub-agents **MUST** state: "Procedural work is delegated to Phanes scripts. Do not implement file size checks, baseline regeneration, or signature diffs in your own reasoning — invoke the script."
 
 This obligation overrides nothing in Phase 4's template; it **amends** the operating protocol section of every generated agent.
 
@@ -772,7 +766,7 @@ This is a **test-driven development (TDD)** workflow:
 
   + Remove any agent archetype not clearly relevant to the **core project purpose**
   + Add specialized agents only for genuine project needs identified in documentation and code
-  + **REQUIRED:** Ensure the roster includes an `api-monitor` (Monitor archetype variant) and an `architect`/`designer` (Planner/Analyzer archetype variant). These are non-optional because they are the single writers of tier 1 and tier 2 registries respectively (Phase 2.5).
+  + **REQUIRED:** Ensure the roster includes an `api-monitor` (Monitor archetype variant) and an `architect`/`designer` (Planner/Analyzer archetype variant). These are non-optional because they are the single writers of the API baseline and the registry respectively (Phase 2.5).
   + **REQUIRED (UI projects only) — the designated visual verifier is a duty, not a headcount:** when Phase 1 detected a UI surface, designate exactly **one** existing roster agent to carry the visual verification duty — prefer the frontend/UI specialist; fall back to the closest Monitor/Validator variant. The designation adds the visual-verification block (Phase 4 template) to that agent's operating protocol and grants it the capture tooling matched from the Phase 0 inventory. Do **NOT** create a dedicated verifier agent — the roster ceiling and description tax forbid spending headcount on a duty an existing specialist carries. The duty can **NEVER** fall on Executor or Patch-Author (they carry no MCP tools) and can **NEVER** be delegated to scouts (scouts never write; captured evidence is a written artifact). One-time setup on designation: append `reports/ui-evidence/` to the project's `.gitignore` (merge, never overwrite; no `.gitignore` → session-summary TODO) — the durable record is the textual pass/fail report, not the image binaries.
   + **Roster ceiling:** Target **6–10 agents**. Every agent's `description` field is injected into the primary agent's context in **every session, every turn** — the roster is a permanent context tax, and it grows linearly with headcount. Merge near-duplicate specializations *within* an archetype (they share ~70% operating-protocol boilerplate; the merged prompt is far smaller than two separate ones, and it is paid only per-invocation, not always-on). **NEVER** merge genuinely distinct domains into one agent — a database-migration expert fused with a CSS specialist dilutes the persona conditioning that makes each effective. Every agent beyond 10 **MUST** be justified in the bootstrap session summary against its description tax.
 * **Parallel Perspectives Strategy:** For especially complex or high-ambiguity challenges, consider assigning multiple sub-agents to the same task with different approaches. **When implementing parallel perspectives:**
@@ -823,7 +817,7 @@ Iteratively **GENERATE** each sub-agent's definition file based on the roster fr
    * **Parallel-perspective chains terminate:** perspectives → **Synthesizer** → **Critic** → `api-monitor` (T2/T3) → `primary`. The final Critic audits the Synthesizer's consolidated plan, never the raw perspectives — the artifact that gets applied is always the artifact that was audited.
    * If a generated chain lacks a Critic, insert the nearest-matching Critic as the penultimate step before `primary`. This is non-negotiable — it holds even for T1 (lightweight diff review, per Phase 2.5 Step 3).
    * Critic reports arrive carrying **both mandatory verdicts** — spec compliance and quality (§II R.A.C.R.S.) — or they do not arrive at all: a report missing either verdict is returned `fix_required` without content review. The orchestrator never pre-judges findings on the Critic's behalf.
-   * Every chain that performs structural code change **MUST** include `api-monitor` as the post-Critic step for T2 and T3 tasks. Insert it automatically if the generated chain omits it. This is how tier 1 registry stays in sync with reality.
+   * Every chain that performs structural code change **MUST** include `api-monitor` as the post-Critic step for T2 and T3 tasks. Insert it automatically if the generated chain omits it. This is how the API baseline stays in sync with reality.
    * Every chain whose change alters a rendered UI **MUST** include the designated visual verifier as the post-Executor step — before `api-monitor` where both apply — per the Visual Evidence Mandate (§II). Insert it automatically if the generated chain omits it. A UI chain without captured evidence is as broken as a structural chain without `api-monitor`.
    * Colors never influence routing (Phase 3). Route on domain expertise and tool fit alone.
    * When no "next agent" is specified for a task, the project CLAUDE.md rule applies: the output is sent for Critic review following the single role or serial chain.
@@ -875,7 +869,7 @@ You **MUST** immediately
 - Gather Data: Open relevant files/logs. **When you do not already know which files matter, `semble search` is the first call — before Grep, before Read** (if installed; see the rubric). If the required raw material exceeds the Scout Cost Guard threshold (digests ≥10:1, not needed verbatim later, substantial work remaining), spawn a read-only scout and consume its digest instead. [Scout-eligible archetypes only.]
 - Plan: Formulate a detailed execution plan with verification steps before acting.
 - Before ANY MCP call, consult the MCP Usage Rubric below — MCP is for when it SAVES context, never a reflex. T1 makes **no** MCP calls, with exactly one exception: `semble` discovery when the target file is genuinely unknown — locating an unknown file is precisely where a Grep sweep costs most, and one indexed query is the cheapest way to end it.
-- Registry Reads (architect/designer agents only): Before designing any new API, run `phanes list-apis <module>` for affected modules and read `documentation/registry/tier2/<module>.md` annotations. If an existing API serves the need, use it — duplicates are forbidden.
+- Registry Reads (architect/designer agents only): Before designing any new API, search for an existing one — `semble search` first (if installed), `phanes list-apis <module>` as the always-available fallback — and read `documentation/registry/<module>.md` annotations for affected modules. If an existing API serves the need, use it — duplicates are forbidden.
 
 ## Specialized skills you bring to the team
 (When creating the agent skill list you must embed a distinct think-level rubric for every skill)
@@ -911,7 +905,7 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
 - **YOU MUST** create actionable reports to complete your task (T1: a one-line summary for the session log suffices — see tier documentation weights).
 - **TEAMWORK** – Communicate next steps to Primary Agent if necessary.
 - **Scout delegation** – [scout-eligible archetypes only] for bulky one-time-use context, spawn a read-only scout per the Scout Cost Guard; scouts return digests with file:line refs, never write, never spawn further agents.
-- **Procedural work goes to scripts** – any mechanical check (LOC, doc ceiling, registry update, API diff, file creation) is done by invoking a `.phanes/scripts/` script, not by agent reasoning.
+- **Procedural work goes to scripts** – any mechanical check (LOC, doc ceiling, baseline regeneration, API diff, file creation) is done by invoking a `.phanes/scripts/` script, not by agent reasoning.
 - **Single-writer discipline** – write only to artifacts assigned to your archetype (see Phase 2.5 Step 8).
 - **File creation** – use `phanes new-file <module> <path> "<description>"`. Never create files by other means (the stamp-guard hook denies it regardless).
 - **Documentation discipline** – any doc you write respects the 500-line soft ceiling and carries both DOC header lines; NEVER bulk-read `documentation/` — descend the `_index.md` indexes and load only the target files (scouts included); never hand-edit an `_index.md` — run `phanes doc-index`.
@@ -964,7 +958,7 @@ An MCP call is justified ONLY when it costs fewer tokens than the native alterna
 
     <!-- CRITICAL MODIFICATION FOR API-MONITOR AGENT: -->
     <!-- If this agent is api-monitor, the Report Body MUST be a structured diff containing:
-         1) Tier 1 regen summary (modules touched)
+         1) Baseline regen summary (modules touched)
          2) API changes since baseline (added/removed/changed signatures, with file refs)
          3) Plan adherence check: planned-and-found, planned-and-missing, unplanned-additions
          4) Caller verification status for changed signatures

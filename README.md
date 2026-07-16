@@ -13,7 +13,7 @@ It is not a tool you install once and forget. It is a *re-runnable specification
 | Your situation | Use |
 | --- | --- |
 | Fresh project, or a project with **no** Phanes yet | **`phanes.md`** → `/phanes` for the full bootstrap. Re-running it also keeps a current-version install upgraded in place. |
-| Project already carrying an **older** Phanes (e.g., a v1 install) | **`PhanesUpdateExperimental.md`** → `/phanesupdate` for version migration. ⚠️ **EXPERIMENTAL, and effectively irreversible once the migration branch is merged; a full backup is mandatory (see "Migrating an older install" below).** It first refreshes your installed `/phanes` command from this repository so you migrate onto the newest spec, then upgrades the project's entire Phanes structure (agents, scripts, hooks, workflows, documentation tree) behind a strict, generated, per-item-verified checklist. Accumulated knowledge (session summaries, tier 2 annotations, snapshots) is preserved and indexed, never rewritten. |
+| Project already carrying an **older** Phanes (e.g., a v1 install) | **`PhanesUpdateExperimental.md`** → `/phanesupdate` for version migration. ⚠️ **EXPERIMENTAL, and effectively irreversible once the migration branch is merged; a full backup is mandatory (see "Migrating an older install" below).** It first refreshes your installed `/phanes` command from this repository so you migrate onto the newest spec, then upgrades the project's entire Phanes structure (agents, scripts, hooks, workflows, documentation tree) behind a strict, generated, per-item-verified checklist. Accumulated knowledge (session summaries, registry annotations, snapshots) is preserved and indexed, never rewritten. |
 
 **Contents**
 
@@ -36,15 +36,15 @@ When you run `/phanes` in a repo for the first time, the prompt drives Claude Co
 1. **Pre-flight.** Installs the four MCP servers it benefits from: `context7` (live library documentation on demand), `deepwiki` (digest answers about external GitHub dependencies, so agents never pull dependency source into context), `semble` (hybrid code search — agents find the exact snippet they need instead of sweeping a module with grep and reading whole files), and, on the first run, `serena` (symbol-level code navigation) via `uv`, which it also installs if missing. These are enhancements, not hard dependencies; a failed install is logged as a TODO and the run continues degraded rather than halting. Exactly four, deliberately: MCP tool schemas cost context every session, so each server has to *remove* more context than its schema costs — `semble` is two tools of schema against the largest token sink in a run — and every generated agent carries a usage rubric stating when each server saves tokens and when to make no MCP call at all. Platform is detected first: bash on POSIX, PowerShell on Windows. Before any of that, the run checks itself: it fetches this repository's `phanes.md`, compares version stamps, refreshes every installed copy when a newer version has shipped, and stops with a re-run notice so no run executes a stale spec. It then inventories what you already have installed — MCP servers, plugins, skills, slash commands — and holds that inventory for least-privilege wiring into matched agents later in the run; nothing you installed is ever modified or removed. The pre-flight also ensures the official `frontend-design` skill is installed (skills cost no context until invoked), so UI and frontend tasks run with deliberate design guidance loaded — and every generated agent is instructed to load it for such tasks; if the install fails or the skill is unavailable, the run simply continues without it. Each run also keeps a run-progress ledger on disk (`.phanes/run-progress`), so a session that dies or compacts mid-bootstrap resumes from the last completed phase instead of restarting blind.
 2. **Repository comprehension.** Reads the README, source tree, configs, and CI to infer the project's *true* purpose, primary language, build system, and module boundaries. Extraneous directories (vendored deps, example packs, demo content) are filtered out.
 3. **Project memory infrastructure.** Scaffolds the substrate every sub-agent operates against:
-   - `documentation/`: session summaries, plans, dated architecture snapshots, and a two-tier API registry (tier 1 generated, tier 2 curated annotations). Every folder carries a **generated `_index.md`**, so agents locate knowledge by descending indexes (a few hundred tokens) instead of scanning trees. Files respect a 500-line soft ceiling and are split-with-index when they outgrow it.
+   - `documentation/`: session summaries, plans, dated architecture snapshots, and a curated API registry (deprecations, contracts beyond signatures, anti-patterns — the knowledge code search cannot see; the generated API surface lives outside the tree as a machine baseline in `.phanes/registry/`). Every folder carries a **generated `_index.md`**, so agents locate knowledge by descending indexes (a few hundred tokens) instead of scanning trees. Files respect a 500-line soft ceiling and are split-with-index when they outgrow it.
    - `tests/`: `unit/`, `integration/`, `e2e/`, `fixtures/`, `helpers/` with a verbatim README and the same `phanes new-file` header-stamp discipline as `src/`.
    - `.phanes/scripts/`: a script library that owns *all* mechanical rules, from file creation with header stamps and line-of-code checks to doc-ceiling audits (`doc-check`), index regeneration (`doc-index`), registry regeneration, API diffs, and module listing.
    - **`.claude/settings.json` hooks**: mechanical rules enforced at the harness layer. A blocking PreToolUse guard denies creation of unstamped new files, and an advisory PostToolUse check runs size and documentation audits on every write. Prompts forget under context pressure; hooks cannot.
    - `.phanes/config.json`: confirmed module list, language, build system, hook prefs.
 4. **Tiered workflow definition.** Every task is triaged into T1 (single-file quick fix), T2 (single-module feature), or T3 (cross-cutting). Each tier loads a different amount of context and engages a different chain of agents, but **review is universal**: even a T1 fix gets a lightweight Critic pass on the diff; only review depth and documentation weight scale with tier. Promotion mid-task requires halting and asking the orchestrator.
 5. **Sub-agent roster generation.** 6–10 deeply-scoped, world-class personas written to `.claude/agents/*.md`, each assigned a model by a dated rubric that is re-validated on every update run:
-   - **Architect/Designer**, the *sole writer* of tier 2 registry and architecture snapshots.
-   - **api-monitor**, the *sole writer* of tier 1 registry; it runs after every structural change.
+   - **Architect/Designer**, the *sole writer* of the curated registry and architecture snapshots.
+   - **api-monitor**, the *sole writer* of the generated API baseline (`.phanes/registry/`); it runs after every structural change.
    - **Critic agents**, producing numbered, ID-tagged audit reports.
    - **Patch-Author**, which turns the synthesized, approved plan into sequenced patch files but never applies them.
    - **Executor**, which applies approved diffs only and uses `phanes new-file` for every new file.
@@ -202,9 +202,9 @@ The first run takes several minutes, will pause to confirm a few choices (module
 ### What gets created on first run
 
 ```
-documentation/        # session summaries, plans, snapshots, registries; every folder indexed by a generated _index.md
+documentation/        # session summaries, plans, snapshots, curated registry; every folder indexed by a generated _index.md
 tests/                # unit, integration, e2e, fixtures, helpers
-.phanes/              # scripts (new-file, regen-registry, api-diff, loc-check, doc-check, doc-index, hook-*) and config
+.phanes/              # scripts (new-file, regen-registry, api-diff, loc-check, doc-check, doc-index, hook-*), config, and the generated API baseline (registry/)
 .claude/agents/       # generated sub-agent definitions (6-10, deeply scoped)
 .claude/workflows/    # codified multi-agent workflows (YAML, the single source of truth for chaining)
 .claude/settings.json # merged hook entries: hook-stamp-guard (blocking) + hook-size-check (advisory)
@@ -239,7 +239,7 @@ Invoke-WebRequest `
   -OutFile "$env:USERPROFILE\.claude\commands\phanesupdate.md"
 ```
 
-Then **back up your project**, open it, and run `/phanesupdate`. It self-updates your `/phanes` command from this repository, fingerprints the installed version, and migrates the structure on a dedicated branch behind a generated, evidence-verified checklist, preserving your accumulated knowledge (tier 2 annotations, session summaries, snapshots) byte-for-byte. Superseded artifacts are archived, never deleted. You review and merge the branch yourself: **verify it thoroughly before merging, because the merge is the point of no return**.
+Then **back up your project**, open it, and run `/phanesupdate`. It self-updates your `/phanes` command from this repository, fingerprints the installed version, and migrates the structure on a dedicated branch behind a generated, evidence-verified checklist, preserving your accumulated knowledge (registry annotations, session summaries, snapshots) byte-for-byte. Superseded artifacts are archived, never deleted. You review and merge the branch yourself: **verify it thoroughly before merging, because the merge is the point of no return**.
 
 ---
 
@@ -265,7 +265,7 @@ Phanes never installs these. The Phase 0 capability inventory discovers them if 
 
 ## Version
 
-Current: **v2.3** (2026-07-15). See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
+Current: **v2.4** (2026-07-16) — registry flattening: a curated registry plus a machine API baseline. See the version stamp at the top of `phanes.md`. Full release history: [`Changelog.md`](Changelog.md). The previous published version is preserved verbatim in [`older version/phanes.md`](older%20version/phanes.md).
 
 ---
 

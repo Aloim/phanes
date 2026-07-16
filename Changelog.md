@@ -4,6 +4,21 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.4 — 2026-07-16
+
+### Changed
+- **Registry flattening: the two-tier registry becomes one curated registry plus a machine baseline.** With `semble` (hybrid code search) and Serena (symbol navigation) in the pre-flight, the generated tier 1 registry lost its read role — a live index query answers "does an API already exist?" fresher than a generated listing ever can, with zero staleness window. What survives of tier 1 is its diff role, and a diff baseline is data, not documentation. Tier 2 — deprecations, contracts beyond signatures, anti-patterns; the knowledge code search cannot see — now IS the registry.
+  - **`documentation/registry/` is the curated registry** (formerly tier 2): one annotation file per module, 30-entry target ceiling, architect/designer remains sole writer. The `tier1/`/`tier2/` subfolders are gone.
+  - **The generated API surface is demoted to a machine baseline** at `.phanes/registry/<module>.json`: api-monitor's diff substrate and `list-apis`' data source, written only by `phanes regen-registry`, read directly by no agent. It lives outside `documentation/` entirely — outside the doc ceiling, outside indexing, outside agent reading lists.
+  - **Duplicate-API prevention is search-first:** the architect's mandate is now `semble search` for an existing API where installed, `phanes list-apis <module>` as the always-available fallback, plus the registry annotations for affected modules.
+  - **T2/T3 no longer preload API slices:** the tier table queries the API surface on demand instead of front-loading generated listings into context.
+  - **Terminology collision removed:** "tier" now means exactly one thing in the document — the T1/T2/T3 workflow tiers.
+  - Scripts keep their names (`regen-registry`, `api-diff`, `list-apis`); only output and read paths change. `api-diff` against a git ref now extracts the old surface from that ref's source rather than reading historical baseline files.
+- **API-contract awareness in the baseline:** for a project that exposes a network-facing API (HTTP/REST, GraphQL, gRPC), the baseline is extracted from the declared public contract — an OpenAPI/Swagger document, a GraphQL SDL, or `.proto` files — not from internal exported symbols, because the contract is what must not drift silently. Phase 1 detects the API surface (mirroring the UI-surface detection); `regen-registry` extracts it as its own baseline slice so `api-diff` flags a removed field or a changed response shape. Symbol extraction stays the default where no network API exists; a project that merely calls external APIs generates no slice.
+- **In-run migration for v2.0–v2.3 installs:** the next update run moves `tier2/*.md` up to `documentation/registry/` byte-identical (verified by git diff), regenerates the baseline into `.phanes/registry/`, deletes the generated `tier1/` folder (regenerate-class; nothing lost), and reindexes. No `/phanesupdate` required.
+
+---
+
 ## v2.3 — 2026-07-15
 
 ### Added
