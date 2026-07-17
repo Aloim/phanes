@@ -16,6 +16,9 @@ function Find-PhanesRoot {
 }
 
 try {
+  # Run by hand instead of by a hook (stdin is a console, no tool-call JSON is coming): exit
+  # cleanly rather than blocking forever on a read that never returns.
+  if (-not [Console]::IsInputRedirected) { exit 0 }
   $raw = [Console]::In.ReadToEnd()
   if (-not $raw) { exit 0 }
   $data = $raw | ConvertFrom-Json

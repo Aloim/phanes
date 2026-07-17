@@ -15,7 +15,7 @@ Provenance note: the scripts in this library take no path substitution. Each scr
 4. Files install into `.phanes/scripts/` keeping their variant extension (`.ps1` and `.cmd` on Windows, `.sh` on POSIX). The `phanes` dispatcher maps `phanes <name>` to the platform file. The settings fragment references the filenames that carry the extension.
 5. POSIX only: the executable bit is set on every installed script.
 6. `.phanes/config.json` is written before the first script runs. Scripts read it at invocation, so a missing config is each script's defined error case, reported cleanly, not a crash.
-7. Smoke run inside the project: `phanes module-list` and `phanes register-check` both exit 0. Each hook script, fed a minimal tool call JSON on stdin, exits 0 on the pass through case.
+7. Smoke run inside the project: `phanes module-list` and `phanes register-check` both exit 0. Each hook script, fed a minimal tool call JSON on stdin, exits 0 on the pass through case, and each also exits 0 at once when run with no piped input (stdin is a terminal), never blocking.
 8. The platform settings fragment is merged into `.claude/settings.json`. Existing hooks are preserved, never overwritten. The Step 4b read back verification then passes: every Phanes hook command contains `.phanes/scripts/` and contains no drive letter and no leading slash.
 9. The `config.json` `templates` block is written: `{ "version": "2.6", "source": "fetched" }`, or `"generated"` when the fallback path produced the scripts.
 10. Any script genuinely edited for this project is recorded in the session summary with the reason. The default is zero edits.

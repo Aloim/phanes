@@ -25,6 +25,9 @@ cfg_str() {
     | sed 's/.*:[[:space:]]*"\(.*\)"$/\1/'
 }
 
+# Run by hand instead of by a hook (stdin is a terminal, no tool-call JSON is coming): exit
+# cleanly rather than blocking forever on a read that never returns.
+[ -t 0 ] && exit 0
 raw=$(cat 2>/dev/null)
 [ -z "$raw" ] && exit 0
 
