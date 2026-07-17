@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [{ "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .phanes/scripts/hook-stamp-guard.ps1" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [{ "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .phanes/scripts/hook-size-check.ps1" }]
+      }
+    ]
+  }
+}

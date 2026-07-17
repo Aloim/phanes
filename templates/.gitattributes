@@ -1,0 +1,5 @@
+# Shell scripts and the extensionless dispatcher MUST ship with LF endings.
+# A CRLF in the shebang line breaks execution on POSIX systems, and the raw fetch serves the
+# stored blob verbatim, so the blob itself must be LF.
+*.sh    text eol=lf
+phanes  text eol=lf

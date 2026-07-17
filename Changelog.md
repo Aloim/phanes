@@ -4,6 +4,18 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.6 — 2026-07-17
+
+### Added
+- **Script template library, fetched instead of regenerated.** The ten scripts that do not depend on the project's language (`new-file`, `loc-check`, `doc-check`, `register-check`, `doc-index`, `module-list`, `list-apis`, the `phanes` dispatcher, and the two hooks `hook-stamp-guard` and `hook-size-check`) now ship as tested reference implementations under `templates/` in the distribution repository, in both a Windows variant (`.ps1` plus a `.cmd` shim) and a POSIX shell variant. Phase 2.5 Step 4 fetches them pinned to the run's own version tag, sanity checks every file, installs them into `.phanes/scripts/`, and works through a shipped `CHECKLIST.md`. A bug fixed once in a template is fixed for every future install, which removes the largest source of variance between installs.
+- **No path substitution.** The fetched scripts take no per project editing. Each one finds the project by walking up from the working directory to `.phanes/config.json` and uses only paths relative to that root, so there is nothing to adapt and nothing to get wrong. Project values (module list, comment syntax, documentation root, stamped trees) are read from `config.json` at run time; the size numbers stay baked constants. `config.json` gains `commentSyntax`, `docRoot`, `stampedTrees`, and a `templates` provenance block that records the version installed and whether it was fetched or generated.
+- **Graceful fallback, no new dependency.** If the fetch fails (offline, rate limited, tag missing) or the manifest version does not match the running prompt, the install generates the scripts from the Step 4 specifications exactly as earlier versions did, and records the failure. Those specifications stay in `phanes.md` in full: they are both the contract the shipped templates are audited against and the offline definition. `regen-registry` and `api-diff` stay generated per project, since their extractors are specific to each language.
+
+### Fixed
+- **Hook commands can no longer be anchored at the wrong project.** A real install wrote its Step 4b hook commands as an absolute path into the Phanes repository instead of the target project, so the enforcement hooks policed the wrong tree and never fired where they were meant to. Step 4b now binds hook commands to their project relative form, copied verbatim, and adds a mechanical read back of the merged `.claude/settings.json`: every Phanes hook command must contain `.phanes/scripts/` and must not contain a drive letter or a leading slash. Update runs rewrite any absolutized hook command back to its relative form and report the repair. The template scripts make the failure structurally impossible on the fetch path, since they carry no absolute paths at all.
+
+---
+
 ## v2.5 — 2026-07-17
 
 ### Added

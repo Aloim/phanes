@@ -1,0 +1,22 @@
+#!/bin/sh
+# phanes-template v2.6 phanes
+# Dispatcher. Routes `phanes <subcommand> [args]` to the sibling script in this directory.
+# Resolves siblings by this script's own location, so it works from any working directory.
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+if [ "$#" -lt 1 ]; then
+  echo "phanes: subcommands: new-file loc-check doc-check register-check doc-index module-list list-apis regen-registry api-diff"
+  exit 0
+fi
+
+sub=$1
+shift
+
+if [ -f "$here/$sub.sh" ]; then
+  exec sh "$here/$sub.sh" "$@"
+elif [ -f "$here/$sub" ]; then
+  exec sh "$here/$sub" "$@"
+else
+  echo "phanes: unknown subcommand '$sub' (no $sub.sh in $here)" >&2
+  exit 1
+fi

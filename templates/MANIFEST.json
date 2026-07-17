@@ -1,0 +1,31 @@
+{
+  "version": "2.6",
+  "description": "Phanes script template library. Reference implementations of the language-independent scripts, fetched by the install run and installed verbatim into .phanes/scripts/. Scripts read .phanes/config.json at runtime and use project-relative paths only, so no per-project substitution is performed.",
+  "installDir": ".phanes/scripts",
+  "sanityStamp": "phanes-template v2.6 <name>",
+  "sanityStampWithinFirstLines": 2,
+  "scripts": [
+    { "name": "phanes",           "role": "dispatcher", "windows": ["scripts/windows/phanes.ps1", "scripts/windows/phanes.cmd"], "posix": ["scripts/posix/phanes"] },
+    { "name": "new-file",         "role": "command",    "windows": ["scripts/windows/new-file.ps1"],         "posix": ["scripts/posix/new-file.sh"] },
+    { "name": "loc-check",        "role": "command",    "windows": ["scripts/windows/loc-check.ps1"],        "posix": ["scripts/posix/loc-check.sh"] },
+    { "name": "doc-check",        "role": "command",    "windows": ["scripts/windows/doc-check.ps1"],        "posix": ["scripts/posix/doc-check.sh"] },
+    { "name": "register-check",   "role": "command",    "windows": ["scripts/windows/register-check.ps1"],   "posix": ["scripts/posix/register-check.sh"] },
+    { "name": "doc-index",        "role": "command",    "windows": ["scripts/windows/doc-index.ps1"],        "posix": ["scripts/posix/doc-index.sh"] },
+    { "name": "module-list",      "role": "command",    "windows": ["scripts/windows/module-list.ps1"],      "posix": ["scripts/posix/module-list.sh"] },
+    { "name": "list-apis",        "role": "command",    "windows": ["scripts/windows/list-apis.ps1"],        "posix": ["scripts/posix/list-apis.sh"] },
+    { "name": "hook-stamp-guard", "role": "hook",       "windows": ["scripts/windows/hook-stamp-guard.ps1"], "posix": ["scripts/posix/hook-stamp-guard.sh"] },
+    { "name": "hook-size-check",  "role": "hook",       "windows": ["scripts/windows/hook-size-check.ps1"],  "posix": ["scripts/posix/hook-size-check.sh"] }
+  ],
+  "settingsFragments": {
+    "windows": "hooks/settings-fragment.windows.json",
+    "posix": "hooks/settings-fragment.posix.json"
+  },
+  "generatedNotFetched": ["regen-registry", "api-diff"],
+  "constants": {
+    "locSoftCeiling": 500,
+    "docSoftCeiling": 500,
+    "registerSoftLimit": 35000,
+    "registerCropTrigger": 40000,
+    "indexInlineEntries": 100
+  }
+}

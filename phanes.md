@@ -1,4 +1,4 @@
-<!-- Phanes v2.5 — 2026-07-17 — single-file bootstrap prompt.
+<!-- Phanes v2.6 — 2026-07-17 — single-file bootstrap prompt.
      Installed copies self-update: Phase 0 Step 0 checks this stamp against upstream on every run and refreshes the install when a newer version has shipped.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8 — re-validate on every new model generation. -->
 
@@ -613,6 +613,14 @@ Sub-agents do not pay full ceremony for every task. **YOU MUST** record these ti
 
 Detect the project's primary language and build system from Phase 1 findings. Generate `.phanes/scripts/` with the following scripts adapted to that language. Each script does exactly one thing. Each script eliminates a class of forgettable rule from sub-agent prompts.
 
+**Acquire, do not author (v2.6).** Most of the scripts below are language independent, so **YOU MUST** first try to fetch tested reference implementations from the distribution repository, pinned to this prompt's own version, instead of writing them fresh on every run. Read your version from the line 1 stamp, detect the platform **FIRST**, and fetch `templates/MANIFEST.json` from the matching tag using the same fetch commands as Step 0 (POSIX `curl`, Windows `Invoke-WebRequest`); for example `https://raw.githubusercontent.com/Aloim/phanes/v2.6/templates/MANIFEST.json`. The manifest version **MUST** equal your own stamp version. Fetch only the matching variant set (Windows `.ps1` plus the `.cmd` shim, or POSIX shell), sanity check every file (the stamp `phanes-template v2.6 <name>` appears within the first two lines; a 404 body or an HTML error page **MUST NEVER** land in `.phanes/scripts/`), install into `.phanes/scripts/` keeping each file's extension, then work through the fetched `templates/CHECKLIST.md` and mirror each item's outcome into the bootstrap session summary. Fetching costs one request per file and removes the largest source of variance between installs.
+
+**Why fetch beats regenerate:** a script rewritten from prose on every install carries fresh variance, and the motivating incident for this change (hook commands that ended up anchored at the Phanes repository path instead of the target project) is exactly that class of drift. A tested template closes it: a bug fixed once in the template is fixed for every future install.
+
+**No path substitution, ever.** The fetched scripts take no per project editing, and that is the point: a value that is never substituted can never be substituted wrong. Each script locates the project by walking up from the working directory until it finds `.phanes/config.json`, and every path it uses is relative to that root. Project specific values (the module list, the comment syntax, the documentation root, the stamped trees) are read from `.phanes/config.json` at run time; the system numbers (500, 35,000, 40,000) are baked constants. A script genuinely edited for one project is the rare exception and **MUST** be recorded in the session summary with its reason.
+
+**Fetch failure or a version mismatch is graceful degradation, NO stop gate.** If the fetch fails (offline, rate limited, tag missing) or the manifest version does not match your own, generate the scripts from the specifications below, exactly as earlier versions did, and record the failure plus the retry command in `capabilities.failures[]` and the session summary TODO. The specifications that follow serve two roles now: the authoritative behavior contract that the shipped templates are audited against, and the fallback definition when a fetch cannot happen. **`regen-registry` and `api-diff` are always generated, never fetched** (their extractors are per language, so they cannot be language independent templates); the manifest lists them under `generatedNotFetched`.
+
 **Termination discipline (hard rule):** every generated script is one-shot, non-interactive, and self-terminating: it reads its arguments (hooks additionally read the tool-call JSON from stdin), does its single job, prints, and exits with a status code. Scripts **MUST NOT** prompt for input (`input()`, `Read-Host`, readline prompts), **MUST NOT** watch, poll, serve, or loop indefinitely, and **MUST NOT** spawn detached or background child processes; any child process is invoked synchronously and awaited. Sub-agents and harness hooks run these scripts headlessly, so a script that waits or lingers does not fail loudly: it hangs the tool call and leaves orphaned interpreter processes accumulating on the user's machine.
 
 * **`phanes new-file <module> <path> "<description>"`** — creates a file with the header stamp. **Refuses** if description is missing, empty, or shorter than five words. `<module>` may be a source module, `tests`, or `docs`; `docs` targets receive the DOC DISCIPLINE header (Step 2b) instead of the module stamp — the mandatory description becomes the file's DOC line — and the script finishes by invoking `phanes doc-index`. Header template for source/tests (use language-appropriate comment syntax):
@@ -638,9 +646,13 @@ Detect the project's primary language and build system from Phase 1 findings. Ge
 
 * **`phanes module-list`** — prints the configured module list (read from `.phanes/config.json`).
 
-Write `.phanes/config.json` with the confirmed module list, primary language, build system, hook preferences, language-specific extractor configuration, and the `capabilities` block — the durable memory of the Installed Capability Inventory (Phase 0) and its failures:
+Write `.phanes/config.json` with the confirmed module list, primary language, build system, hook preferences, language-specific extractor configuration, the runtime fields the fetched scripts read (`commentSyntax`, `docRoot`, `stampedTrees`), the `templates` provenance block, and the `capabilities` block — the durable memory of the Installed Capability Inventory (Phase 0) and its failures. Set `commentSyntax` to the detected language's line comment marker (for example `//`, `#`, or `--`), since `new-file` stamps source files with it; set `stampedTrees` to the trees the stamp guard protects (the source roots plus `tests` and the documentation root). Set `templates.source` to `"fetched"` when the templates were acquired from the distribution repository, or `"generated"` when the fallback produced them:
 
 ```json
+"commentSyntax": "//",
+"docRoot": "documentation",
+"stampedTrees": ["src", "tests", "documentation"],
+"templates": { "version": "2.6", "source": "fetched" },
 "capabilities": {
   "inventoryDate": "YYYY-MM-DD",
   "granted": [{ "name": "", "type": "mcp|skill|command|agent", "agents": [], "purpose": "", "fallback": "" }],
@@ -664,25 +676,29 @@ Generate two hook scripts in `.phanes/scripts/` (platform-appropriate — shell 
     "PreToolUse": [
       {
         "matcher": "Write",
-        "hooks": [{ "type": "command", "command": ".phanes/scripts/hook-stamp-guard" }]
+        "hooks": [{ "type": "command", "command": ".phanes/scripts/hook-stamp-guard.sh" }]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
-        "hooks": [{ "type": "command", "command": ".phanes/scripts/hook-size-check" }]
+        "hooks": [{ "type": "command", "command": ".phanes/scripts/hook-size-check.sh" }]
       }
     ]
   }
 }
 ```
 
+**Path discipline (v2.6, binding).** The hook `command` strings above are **project relative** and **YOU MUST** copy them verbatim in that form. The example shows the POSIX shell form; on Windows each command wraps the same relative path in a PowerShell launcher, for example `powershell -NoProfile -ExecutionPolicy Bypass -File .phanes/scripts/hook-stamp-guard.ps1`, and the fetched Windows settings fragment already carries this form. **NEVER** rewrite a hook command as an absolute path, and **NEVER** anchor it outside the target project: a hook command **MUST NOT** contain a drive letter, a leading slash, a home directory reference, or the Phanes source path. This is not a style preference. A real install once wrote its hook commands anchored at the Phanes repository path, so the enforcement hooks policed the wrong tree and never fired in the project they were meant to guard.
+
+**Verify the merge mechanically.** After merging, read `.claude/settings.json` back and check every Phanes hook command: it **MUST** contain `.phanes/scripts/` and it **MUST NOT** contain a drive letter or a leading slash. A command that fails either check is a blocking defect; fix it and verify again before continuing. This check is stated once, here, so the mechanical part cannot be forgotten under context pressure, the same reason the guard itself lives in a hook rather than a prompt.
+
 * **`hook-stamp-guard`** (blocking — exit code 2 denies the tool call): reads the tool-call JSON from stdin. If the target file does **not** yet exist, lives under a stamped tree (source modules, `tests/`, `documentation/`), and its content lacks the required header stamp → deny with the message: "New files must be created via `phanes new-file` — the stamp is what `regen-registry` slices modules by; bypassing it produces silent API-baseline drift." All other calls pass (exit 0).
 * **`hook-size-check`** (advisory — always exit 0): runs `phanes loc-check` against touched source files; for touched documentation files it runs `phanes doc-index` (indexes regenerate on every doc write — they can never silently rot) followed by `phanes doc-check`; for a touched hot file (project root `CLAUDE.md` or `CLAUDE.local.md`) it runs `phanes register-check` — the register is updated at the start of every task, so the hot-file budget is measured on every tier, in every session, at the harness layer where it cannot be forgotten; prints any warning into the transcript so the acting agent sees the breach immediately, in-context, at the moment it happens.
 
 **Activation caveat:** Claude Code snapshots hook configuration at session start — hook entries written during this run do **not** fire until the next session. Phase 5 informs the user that a restart is required to arm them; the bootstrap itself never depends on the hooks mid-run.
 
-Report the installed hooks in the bootstrap session summary. On update runs, verify the hook entries still exist and still point at existing scripts; repair silently-deleted entries and report the repair.
+Report the installed hooks in the bootstrap session summary. On update runs, verify the hook entries still exist and still point at existing scripts via project relative paths; repair silently deleted entries, rewrite any command that has been anchored at an absolute or out of project path back to its relative form (the Path discipline check above), and report every repair.
 
 #### Step 5: Initial Architecture Snapshot
 
