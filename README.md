@@ -71,6 +71,37 @@ The pre-flight detects your platform first and runs the matching commands: bash 
 
 **6. Workflow codification.** The YAML files in `.claude/workflows/` are the single source of truth for how agents chain together. Every chain ends the same way: the Synthesizer runs for parallel work only, then the Critic, then `api-monitor` on T2 and T3 changes, then the primary agent. Because of that ordering, the artifact that gets applied is always the one that was audited. Phanes also updates `CLAUDE.md`, at the project root and at module roots only, so the primary agent knows how to triage, delegate, navigate the documentation by index, and review.
 
+Visualized, that chain looks like this. A task's tier changes only how deep the review goes and how much documentation it produces, never whether the review happens:
+
+```text
+                             task
+                              │
+                              ▼   triaged into a tier
+        ╭─────────────────────────────────────────╮
+        │ T1  one file      lightweight review    │
+        │ T2  one module    full review           │
+        │ T3  cross-module  full review + snapshot│
+        ╰─────────────────────┬───────────────────╯
+                              │
+                              ▼   specialists: bounded fan-out, ≤ 5 parallel
+              Analyzer · Planner · Patch-Author · …   (tuned to your stack)
+                              │   each emits a report + proposed diff, never applies
+                              ▼
+                        Synthesizer    consolidate parallel perspectives  *
+                              │
+                              ▼
+                        Critic         two verdicts: spec compliance + quality
+                              │
+                              ▼
+                        api-monitor    regenerate API baseline  (T2 / T3 only)
+                              │
+                              ▼
+                        Executor       apply the audited diff, and only that
+
+        * Synthesizer runs for parallel work only. Because the chain always
+          ends review-then-apply, the artifact applied is always the one audited.
+```
+
 **7. Bootstrap session summary.** Phanes writes `documentation/session-summaries/SS00001_phanes-bootstrap_<date>.md`, which records the install, the confirmed module list, the agent roster, and any TODOs that were deferred.
 
 > **After the first run, restart your Claude Code session.** Hook configuration is snapshotted when a session starts, so the enforcement hooks arm on the next session. Phanes reminds you of this verbatim at the end of the run.
@@ -221,16 +252,27 @@ The first run takes several minutes. It pauses to confirm a few choices, such as
 ### What gets created on the first run
 
 ```
-documentation/        # session summaries, plans, snapshots, curated registry; every folder indexed by a generated _index.md
-tests/                # unit, integration, e2e, fixtures, helpers
-.phanes/              # scripts (new-file, regen-registry, api-diff, loc-check, doc-check, doc-index, register-check, hook-*), config, and the generated API baseline (registry/)
-.claude/agents/       # generated sub-agent definitions (6 to 10, deeply scoped)
-.claude/workflows/    # codified multi-agent workflows (YAML, the single source of truth for chaining)
-.claude/settings.json # merged hook entries: hook-stamp-guard (blocking) plus hook-size-check (advisory)
-.claude/template/     # report.md template used by every sub-agent
-.claude/.phanes       # run counter and install-state marker (hidden)
-CLAUDE.md             # root: primary-agent mandates; module roots: folder-specific guidance
-CLAUDE.local.md       # live register of projects in motion; status and pointers only, 35k/40k char budget (gitignored by convention)
+your-repo/
+├─ documentation/        # project memory, navigated by index, never bulk-read
+│  ├─ _index.md          #   generated index (sole writer: phanes doc-index)
+│  ├─ session-summaries/ #   SS0000N run records
+│  ├─ plans/             #   dated implementation plans
+│  ├─ snapshots/         #   dated architecture snapshots
+│  └─ registry/          #   curated API registry (sole writer: Architect)
+├─ tests/                # unit · integration · e2e · fixtures · helpers
+├─ .phanes/              # scripts, config, and machine-owned state
+│  ├─ scripts/           #   new-file · doc-index · loc/doc/register-check · hook-*
+│  ├─ registry/          #   generated API baseline (sole writer: api-monitor)
+│  ├─ config.json        #   confirmed modules · language · build system
+│  └─ run-progress       #   phase ledger for crash / compaction resume
+├─ .claude/              # harness wiring
+│  ├─ agents/            #   6-10 deeply scoped expert personas
+│  ├─ workflows/         #   YAML agent chains: the single source of truth
+│  ├─ settings.json      #   stamp-guard (blocking) + size-check (advisory) hooks
+│  ├─ template/          #   report.md used by every sub-agent
+│  └─ .phanes            #   run counter + install-state marker (hidden)
+├─ CLAUDE.md             # root: orchestration mandates; modules: local guidance
+└─ CLAUDE.local.md       # live register of work in motion (35k/40k char budget)
 ```
 
 The default `.gitignore` shipped with this repository excludes `.claude/`, `.phanes/`, and other runtime artifacts. Adjust it to taste in your own project.
