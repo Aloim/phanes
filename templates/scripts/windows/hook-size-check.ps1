@@ -1,4 +1,4 @@
-# phanes-template v2.6 hook-size-check
+# phanes-template v2.6.1 hook-size-check
 # PostToolUse(Write|Edit) advisory. Reads the tool-call JSON from stdin and routes the touched file
 # to the matching audit: a hot file (root CLAUDE.md or CLAUDE.local.md) runs register-check; a
 # documentation file runs doc-index then doc-check; anything else runs loc-check on that file.

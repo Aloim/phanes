@@ -4,6 +4,19 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v2.6.1 — 2026-07-17
+
+### Fixed
+- **Update runs reconcile an existing script library instead of overwriting it.** v2.6's "acquire, do not author" step (Phase 2.5 Step 4) was written for a fresh install: an absent script library is filled from tested templates. On an update run a working library already exists, and it is not always a stale copy of the shipped templates. It may have been generated in the project's own language by an earlier version, kept as a recorded per project edit, or deliberately rewritten with a project specific safety behavior. Fetching over such a library traded a known good, project shaped set of scripts for a generic one and replaced the `phanes` dispatcher with a different runtime, orphaning the scripts it routes to. Step 4 now branches on `.phanes/config.json` and the files on disk: an absent library is fetched, a library already in the shipped runtime is re-fetched so upstream fixes propagate, and a library authored in another runtime or carrying a project specific guard is preserved and verified against the in document specifications rather than replaced. A real update run hit exactly this: a project with a script library authored in its own language, and a guard on its registry regeneration, would have had that library swapped for generic shell templates. The reconcile path makes preservation the defined behavior instead of a hand judged exception.
+
+### Added
+- **`templates.source` gains a `"preserved"` value.** `.phanes/config.json` now records `"preserved"` alongside `"fetched"` and `"generated"`, so an update run that keeps a project shaped library instead of fetching over it stays legible to later runs, and swapping a preserved library for the shipped templates becomes an explicit user decision rather than a silent side effect.
+
+### Changed
+- Template library re-stamped to `v2.6.1` with no change to script behavior, so the manifest version, the sanity stamp, and every template stamp stay equal to the prompt stamp, as the acquire step's version check requires.
+
+---
+
 ## v2.6 — 2026-07-17
 
 ### Added

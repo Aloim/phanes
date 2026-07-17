@@ -1,8 +1,8 @@
 {
-  "version": "2.6",
+  "version": "2.6.1",
   "description": "Phanes script template library. Reference implementations of the language-independent scripts, fetched by the install run and installed verbatim into .phanes/scripts/. Scripts read .phanes/config.json at runtime and use project-relative paths only, so no per-project substitution is performed.",
   "installDir": ".phanes/scripts",
-  "sanityStamp": "phanes-template v2.6 <name>",
+  "sanityStamp": "phanes-template v2.6.1 <name>",
   "sanityStampWithinFirstLines": 2,
   "scripts": [
     { "name": "phanes",           "role": "dispatcher", "windows": ["scripts/windows/phanes.ps1", "scripts/windows/phanes.cmd"], "posix": ["scripts/posix/phanes"] },
