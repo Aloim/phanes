@@ -1,4 +1,4 @@
-﻿# phanes-template v2.6 module-list
+# phanes-template v2.6 module-list
 # Prints the configured module list, one per line, read from .phanes/config.json.
 $ErrorActionPreference = 'Stop'
 
