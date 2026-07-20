@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v2.6.1 register-check
+# phanes-template v3.0 register-check
 # Measures the two hot files (root CLAUDE.md and CLAUDE.local.md) in characters and prints a status
 # line each: OK (below 35000), SOFT-BREACH (35000 to 40000), CROP-REQUIRED (above 40000). Also lists
 # every completed register entry (## checkmark heading) still present, and reports the

@@ -1,4 +1,4 @@
-# phanes-template v2.6.1 new-file
+# phanes-template v3.0 new-file
 # Creates a file with the required header stamp. The only sanctioned way to create files.
 # Usage: phanes new-file <module> <path> "<description of at least five words>"
 # <module> may be a source module, tests, or docs. docs targets get the DOC DISCIPLINE header and

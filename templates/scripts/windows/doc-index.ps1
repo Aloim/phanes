@@ -1,4 +1,4 @@
-# phanes-template v2.6.1 doc-index
+# phanes-template v3.0 doc-index
 # Regenerates every _index.md under the documentation tree (archive/ excluded). SOLE WRITER of
 # indexes; hand-editing them is forbidden. Each entry is extracted in fallback order: DOC header
 # line, then first heading, then humanized filename, so files predating the discipline are indexed

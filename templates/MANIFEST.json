@@ -1,10 +1,11 @@
 {
-  "version": "2.6.1",
+  "version": "3.0",
   "description": "Phanes script template library. Reference implementations of the language-independent scripts, fetched by the install run and installed verbatim into .phanes/scripts/. Scripts read .phanes/config.json at runtime and use project-relative paths only, so no per-project substitution is performed.",
   "installDir": ".phanes/scripts",
-  "sanityStamp": "phanes-template v2.6.1 <name>",
+  "sanityStamp": "phanes-template v3.0 <name>",
   "sanityStampWithinFirstLines": 2,
   "scripts": [
+    { "name": "cli",              "role": "dispatcher", "windows": ["scripts/cli.js"],                        "posix": ["scripts/cli.js"] },
     { "name": "phanes",           "role": "dispatcher", "windows": ["scripts/windows/phanes.ps1", "scripts/windows/phanes.cmd"], "posix": ["scripts/posix/phanes"] },
     { "name": "new-file",         "role": "command",    "windows": ["scripts/windows/new-file.ps1"],         "posix": ["scripts/posix/new-file.sh"] },
     { "name": "loc-check",        "role": "command",    "windows": ["scripts/windows/loc-check.ps1"],        "posix": ["scripts/posix/loc-check.sh"] },
