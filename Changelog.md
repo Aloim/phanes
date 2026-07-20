@@ -4,6 +4,21 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v3.0.1 (2026-07-21)
+
+Patch. Corrects how reasoning-effort control is described, and adds a temporary bridge that gives the few deepest agents true per-agent effort until the harness supports it natively. The template library is re-stamped to v3.0.1 with no change to script behavior, so the fetch-time version check stays satisfied; deployed projects adopt the prose on their next update run.
+
+### Fixed
+- **Effort-control rubric corrected.** v3.0 claimed the agent template's `effort:` frontmatter was "honored on CLI dispatch, ignored on in-session Task spawns until #43083 lands." Verified against the current harness and the primary issues, effort frontmatter is honored on **no** native spawn path: the in-session Task/Agent tool has no effort input (anthropics/claude-code #43083, open), and the headless-frontmatter and Workflow `agent()` effort requests (#65598, #64033) are closed as duplicates of it. The only working lever is session-level effort, set at launch with `--effort` or `CLAUDE_CODE_EFFORT_LEVEL`, never `/effort` or `/model` mid-run, since both persist to the global settings file and leak into other projects and parallel sessions (#57618, #49076). The rubric now states this and drops the overclaim.
+
+### Added
+- **Per-Agent Effort Delivery, a temporary CLI-spawn bridge.** Session effort is the orchestrator's own dial and cannot be raised cleanly mid-run, so the session launches at the orchestrator's peak need (`high` by default, `xhigh` for design-heavy runs) and in-session Task agents ride that baseline. To lift a specific heavy archetype above the baseline (architect/designer, synthesizer/arbiter, security- or money-critical critics, 2 to 4 per run), the orchestrator spawns it as its own process, `claude --bg "<prompt>" --agent <name> --effort <level> --permission-mode <mode>`, monitors it with `claude agents --json`, and collects its output with `claude logs <id>` or its report artifact. The bridge is upward only: never spawn an agent to run it cheaper, since the fixed per-process entry tax exceeds the effort saving. The effort band is narrowed to `medium | high | xhigh`. The subsection carries a removal marker: when #43083 ships, it is deleted and the `effort:` frontmatter goes native.
+
+### Changed
+- **Template library re-stamped to `v3.0.1`** with no change to script behavior, so the manifest version, the sanity stamp, and every template stamp stay equal to the prompt stamp, as the acquire step's version check requires.
+
+---
+
 ## v3.0 (2026-07-20)
 
 Major version. It adds a consent layer over capability discovery, renames the close-time verifier to match its real duties, makes the CLI reachable from any shell, and re-grounds the model rubric on a tier-first policy with forward-compatible effort control. All changes are to `phanes.md` and the template library; deployed projects adopt them on their next update run.

@@ -1,4 +1,4 @@
-# phanes-template v3.0 phanes
+# phanes-template v3.0.1 phanes
 # Dispatcher. Routes `phanes <subcommand> [args]` to the sibling script in this directory.
 # Resolves siblings by this script's own location, so it works from any working directory.
 $ErrorActionPreference = 'Stop'

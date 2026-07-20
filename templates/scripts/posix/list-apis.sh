@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.0 list-apis
+# phanes-template v3.0.1 list-apis
 # Prints the API baseline entries for one module to stdout, read from the machine baseline at
 # .phanes/registry/<module>.json (produced by regen-registry). Sub-agents call this as a tool.
 

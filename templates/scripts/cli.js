@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// phanes-template v3.0 cli
+// phanes-template v3.0.1 cli
 // Cross-shell entry point: `node .phanes/scripts/cli.js <subcommand> [args]` resolves identically
 // in PowerShell, cmd, and Git Bash, so agents never depend on PATH or a shell-specific launcher.
 // It forwards to the platform dispatcher sibling (phanes.ps1 on Windows, the POSIX `phanes`

@@ -1,4 +1,4 @@
-<!-- Phanes v3.0.1 (2026-07-21). Single-file bootstrap prompt.
+<!-- Phanes v3.0 (2026-07-20). Single-file bootstrap prompt.
      Installed copies self-update: Phase 0 Step 0 checks this stamp against upstream on every run and refreshes the install when a newer version has shipped.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8. Re-validate on every new model generation. -->
 
@@ -906,11 +906,11 @@ Iteratively **GENERATE** each sub-agent's definition file based on the roster fr
 
 #### Rubric: Model & Effort Selection
 
-> **Reviewed 2026-07-21 against: Haiku 4.5, Sonnet 5, Opus 4.8.** Model capabilities shift with every generation, on each update run, verify this rubric against the currently available models and revise it if stale. Do not trust an unreviewed rubric.
+> **Reviewed 2026-07-20 against: Haiku 4.5, Sonnet 5, Opus 4.8.** Model capabilities shift with every generation, on each update run, verify this rubric against the currently available models and revise it if stale. Do not trust an unreviewed rubric.
 >
 > **Two dials, in priority order, tier first, effort second.** *Tier* (the model) is the dominant lever: a stronger model at moderate reasoning effort reliably beats a weaker model at its ceiling, and past a handful of agent steps it does so for **fewer** tokens, not more. *Effort* is the second-order trim within a chosen tier, never a substitute for choosing the right tier.
 >
-> **Effort control, the harness reality (verified 2026-07-21).** The `effort:` frontmatter is **not read natively on any in-session spawn path** today: the Task/Agent tool has no effort input and ignores the field (anthropics/claude-code #43083, **open**; the related #64033 Workflow `agent()` effort and #65598 frontmatter-effort requests are **closed as duplicates** of it). The **only** working lever is **session-level effort**, shared by the orchestrator and every in-session Task agent. Set it **at launch** with `--effort <level>` or `CLAUDE_CODE_EFFORT_LEVEL=<level>`; **never** `/effort` or `/model` mid-run, both persist to the **global** `~/.claude/settings.json` and leak into other projects and parallel sessions (#57618, #49076). Because that dial **is the orchestrator's own effort** and cannot be raised cleanly mid-run (project `settings.json` is read once at startup, not hot-reloaded), **launch at the orchestrator's peak need: `high` by default, `xhigh` for design-heavy runs.** Haiku has **no** effort dial; the baseline never touches haiku agents, so omit the field for them. To lift a specific heavy agent **above** the baseline, use the temporary CLI-spawn bridge in "Per-Agent Effort Delivery" below. When #43083 lands, the frontmatter activates natively on the Task tool and that bridge is deleted.
+> **Effort control and the harness caveat (as of this review).** The generated agent template carries an `effort:` frontmatter field (`low | medium | high | xhigh`). It is **honored today only when an agent is dispatched via the CLI**; it is **ignored on the in-session Task-tool spawn path** (anthropics/claude-code #43083, open), so treat it as forward-compatible annotation now, and steer in-session depth with the **thinking directives** below, which always work. When #43083 lands, the frontmatter activates with no further change. Haiku exposes **no** effort dial at all, omit the field for haiku agents. Re-check both facts on every harness update.
 
 You **MUST** select each agent's `model`, `effort`, and thinking directive together, **tier first**:
 
@@ -924,26 +924,6 @@ You **MUST** select each agent's `model`, `effort`, and thinking directive toget
 **The anti-pattern to avoid (measured, not asserted):** maxing `effort` on a *smaller* model is **not** a cheap substitute for moving up a tier. Beyond roughly 4 to 8 agent steps, a smaller model driven to its reasoning ceiling can consume **more** total tokens than the stronger model at its default effort, while still losing on quality. When a task is hard, escalate the **tier** first; only then trim effort within it. Never pair a weak model with max effort to dodge a warranted tier bump.
 
 **Thinking directives (native, the sequential-thinking MCP is removed):** escalate `think` → `think hard` → `ultrathink` with the logical depth of the skill or task, the **in-session** depth lever, unaffected by the `effort` caveat above. Embed a distinct directive per skill/task in every agent definition (see template). Scouts get none, they retrieve, they do not deliberate. Architect and Synthesizer default to `think hard`, escalating to `ultrathink` for cross-module design.
-
-<!-- TEMPORARY (added 2026-07-21, remove when anthropics/claude-code #43083 ships): the entire "Per-Agent Effort Delivery" subsection below exists ONLY to work around the harness having no in-session per-subagent effort. When #43083 lands, DELETE this subsection and this marker: per-agent effort becomes native on the Task/Agent tool, the effort: frontmatter is honored directly, and no CLI spawn is needed. -->
-
-#### Per-Agent Effort Delivery (TEMPORARY bridge, retire when #43083 lands)
-
-**The effort band.** Legal effort values are `medium | high | xhigh`. `low` is banned (untrusted floor), `max` is banned (ceiling). Clamp every effort the orchestrator sets or passes into this band, so a malformed or hand-edited `effort:` field can never drop below medium or exceed xhigh.
-
-**The baseline is the orchestrator's own dial.** Session effort governs the primary (orchestrator) agent AND every agent spawned in-session via the Task tool, and it cannot be changed cleanly mid-run. Launch the session at the orchestrator's peak need with `--effort` or `CLAUDE_CODE_EFFORT_LEVEL`: **`high` by default**, **`xhigh` for design-heavy runs** where the orchestrator carries synthesis inline. The orchestrator delegates its deepest reasoning to the architect and synthesizer archetypes, so `high` is the correct default, not `xhigh`. Non-haiku Task agents ride this baseline (running a touch hot is the safe direction); haiku agents ignore it.
-
-**The bridge, upward only.** The in-session Task tool cannot lift an agent above the baseline. To run a heavy archetype at **more** effort than the baseline, spawn it as its own CLI process instead of via the Task tool:
-
-```text
-claude --bg "<full injected-context prompt>" --agent <name> --effort <xhigh|high> --permission-mode <non-interactive mode>
-```
-
-* **Which agents:** only the heavy xhigh archetypes that exceed a `high` baseline, the architect/designer, the synthesizer/arbiter, and security- or money-critical critics. Typically 2 to 4 spawns per run.
-* **Effort source:** read `<level>` from the agent's `effort:` frontmatter, clamped to the band.
-* **Never spawn downward.** Do **NOT** CLI-spawn an agent merely to run it *cheaper* than the baseline. Each fresh process pays a large fixed entry tax (cold cache plus a full reload of the system prompt, tool and MCP schemas, and the hot files) that exceeds the reasoning tokens a lower effort would save. Let lighter agents ride the baseline in-session, and send genuinely cheap work to haiku (no dial) by tier. With an `xhigh` baseline the bridge has no upward use at all: run everything in-session and skip it.
-* **Permissions:** a background agent cannot answer permission prompts (it would hang), so it must run in a non-interactive mode. Keep each agent's `tools:` scoped to least privilege (already mandated) so a non-interactive mode grants only the authority that agent needs.
-* **Collection:** background agents return no inline payload. Poll `claude agents --json`; on `state: done` read the agent's output with `claude logs <id>`, or its report artifact (single-writer discipline already routes each agent's output to a known artifact); on `state: failed` re-dispatch or escalate. Bounded Fan-Out (max 5 in flight) still applies.
 
 #### IMPERATIVE: The Sub-Agent `description` Field (The Sole Invocation Trigger)
 
@@ -963,7 +943,7 @@ name: <sub-agent-name>
 description: "Provides [concise capability/purpose]. MUST BE USED for [hard-trigger topics or cues]. Use PROACTIVELY when you hear [trigger keywords / scenario examples]. ≤50 words total."
 color: <color-choice>  # Essential for visual tracking in team operations
 model: sonnet | opus | haiku  # Must be defined using the Model & Effort Selection rubric
-effort: medium | high | xhigh  # Band: medium floor, xhigh ceiling (never low/max). OMIT for haiku (no dial). Source of truth the orchestrator reads and passes as --effort when CLI-spawning an xhigh archetype (temporary bridge, see rubric). NOT read by the in-session Task tool today; honored natively when claude-code #43083 lands.
+effort: low | medium | high | xhigh  # Per the rubric. OMIT for haiku (no effort dial). Forward-compatible: honored on CLI dispatch, ignored on in-session Task spawns until claude-code #43083 lands; thinking directives remain the in-session depth lever.
 tools: tool1, tool2    # Least privilege. Write access only for report/artifact writers per single-writer assignments. Execution access to `.phanes/scripts/` where the agent invokes scripts. Serena where installed and useful. Agent-spawning tool for scout-eligible archetypes only. May list exact MCP tool names (mcp__server__tool) or a server pattern (mcp__server__*) for fine-grained least privilege.
 mcpServers: server-a, server-b   # Optional per-agent MCP allowlist (v3.0). List ONLY servers the user SELECTED in the Phase 0 consent gate AND that Phase 3 matched to this agent. Omit entirely if none. Executor and Patch-Author never carry MCP servers.
 ---
