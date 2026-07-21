@@ -1,9 +1,11 @@
 #!/bin/sh
-# phanes-template v3.1 register-check
+# phanes-template v3.2 register-check
 # Measures the two hot files (root CLAUDE.md and CLAUDE.local.md) in characters and prints a status
 # line each: OK (below 35000), SOFT-BREACH (35000 to 40000), CROP-REQUIRED (above 40000). Also lists
-# every completed register entry (## checkmark heading) still present, and reports the
-# standing-blocker section character count separately. Advisory: always exits 0.
+# every completed register entry (## checkmark heading) still present, reports the
+# standing-blocker section character count separately, and reports the Pinned Directives
+# block character count separately (v3.2, the root CLAUDE.md crop-exemption class).
+# Advisory: always exits 0.
 SOFT=35000
 CROP=40000
 
@@ -56,6 +58,17 @@ for name in CLAUDE.md CLAUDE.local.md; do
   ' "$f")
   if [ "$blk" -gt 0 ] 2>/dev/null; then
     echo "  standing-blockers section: $blk chars"
+  fi
+
+  # Pinned Directives block character count (v3.2): opening marker line to closing marker line, inclusive.
+  pin=$(awk '
+    /^<!-- PINNED DIRECTIVES/ { inpin=1 }
+    inpin { chars += length($0)+1 }
+    /^<!-- \/PINNED DIRECTIVES -->/ { inpin=0 }
+    END { print chars+0 }
+  ' "$f")
+  if [ "$pin" -gt 0 ] 2>/dev/null; then
+    echo "  pinned-directives block: $pin chars"
   fi
 done
 exit 0

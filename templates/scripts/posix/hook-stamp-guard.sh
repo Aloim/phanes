@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.1 hook-stamp-guard
+# phanes-template v3.2 hook-stamp-guard
 # PreToolUse(Write) guard. Reads the tool-call JSON from stdin. Denies (exit 2) creation of a NEW
 # file under a stamped tree whose content lacks the required header stamp, so new files must go
 # through `phanes new-file`. Every other call passes (exit 0). Fails open on any parse trouble.

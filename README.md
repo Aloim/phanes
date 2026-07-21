@@ -327,9 +327,9 @@ Phanes never installs these. The capability census discovers them only if you in
 
 ## Version
 
-Current: **v3.1** (2026-07-21). Phanes gains its real upgrade path. The version check at the start of every run now asks before it changes anything and routes version jumps to the new `/phanesupgrade` command, which plans from the changelog, computes exact file operations from an installed-artifact manifest, and runs on a branch you merge yourself. Agents are named with a project prefix (`<projectSlug>-<role>`) so a project's own team is unambiguous next to plugin and user-level agents. The old trial migrator is retired.
+Current: **v3.2** (2026-07-21). Two operating-discipline fixes and one architecture addition. A top-anchored, delete-protected **Pinned Directives block** becomes the first content of every project's root `CLAUDE.md`, so the always-loaded surface now carries the binding rules that used to live only in the prompt (the per-agent effort trigger among them). A **procedure-precedence rule** plus a supersession-annotation pass stop stale session-summary narrative from overriding the current spec. And an ephemeral **Orchestrator** executes long plan runs in self-sized batches of a few steps each, so the primary session stays slim enough to run across many phases without compacting; short runs and explicitly narrowed ones behave exactly as before.
 
-Beneath it: v3.0.1 corrected the reasoning-effort rubric and added a CLI-spawn bridge for per-agent effort; v3.0 added the capability consent layer, the `close-verifier` rename, and the cross-shell `cli.js` launcher. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
+Beneath it: v3.1 gave Phanes its real upgrade path, routing version jumps to `/phanesupgrade` (plan from the changelog, exact file operations from an installed-artifact manifest, on a branch you merge yourself) and prefixing agents with the project slug; v3.0.1 corrected the reasoning-effort rubric and added the CLI-spawn bridge for per-agent effort; v3.0 added the capability consent layer, the `close-verifier` rename, and the cross-shell `cli.js` launcher. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
 
 ---
 

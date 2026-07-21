@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.1 loc-check
+# phanes-template v3.2 loc-check
 # Scans tracked source files and prints any over the 500 LOC soft ceiling with line counts.
 # With file arguments, checks only those files (this is how hook-size-check invokes it).
 # Advisory: always exits 0.

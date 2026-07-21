@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.1 doc-index
+# phanes-template v3.2 doc-index
 # Regenerates every _index.md under the documentation tree (archive/ excluded). SOLE WRITER of
 # indexes; hand-editing them is forbidden. Each entry is extracted in fallback order: DOC header
 # line, then first heading, then humanized filename. Rotates an index past ~100 entries: the newest

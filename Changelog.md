@@ -6,6 +6,27 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v3.2 (2026-07-21)
+
+Minor version. Two operating-discipline fixes from live v3.1 operation and one architecture addition: binding rules now ride the always-loaded surface, stale session-summary precedent is neutralized, and long plan runs execute through an ephemeral Orchestrator so the primary session stays slim enough to never compact.
+
+### Added
+- **Pinned Directives block.** Phase 2 now generates a top-anchored, delete-protected block as the FIRST content of the project root CLAUDE.md, namespaced per tool (`pinned:phanes` now; companion namespaces reserved), regenerated every run, crop-exempt but budget-counted. Seeded with two entries: the per-agent effort trigger (the Task/Agent tool ignores `effort:` frontmatter, #43083; above-baseline archetypes MUST go through the CLI-spawn bridge) and the procedure-precedence rule. Root cause served: the v3.1 effort bridge existed only in phanes.md, so nothing at dispatch time triggered its use.
+- **Procedure precedence and supersession annotation.** Standing rule (Phase 3, session-summaries README, pinned entry): current phanes.md/skill and workflow YAML outrank session-summary narrative on any operating-procedure conflict. Update runs now scan session summaries for procedure statements contradicted by the current spec and append additive `> SUPERSEDED (procedure) by vX.Y.Z` notes, never renumbering or rewriting.
+- **The Orchestrator role (slim-session plan execution).** New REQUIRED roster member `<projectSlug>-orchestrator` (opus/high) plus §III rules 11-13. Plan runs of 5+ steps (config `orchestratorStepThreshold`, ambiguity defaults to engaged) spawn an ephemeral Orchestrator per batch of 1 to 3 self-estimated consecutive steps (never across a phase boundary): it runs tier triage, composes chains, dispatches workers in-session at baseline, CLI-spawns only above-baseline archetypes via the effort bridge, writes one batch session summary, and returns a bounded JSON receipt (`steps_completed`, `verdict`, `ss_written`, `register_lines`). The receipt's `ss_written` field is the single-SS-writer handshake; `register_lines` feeds the CLAUDE.local.md register verbatim so the session never re-reads context. Explicit user narrowing or plans of 4 or fewer steps run without it, exactly as v3.1.
+
+### Changed
+- **"Orchestrator" naming reclaimed.** The vestigial §II parenthetical calling the Synthesizer/Arbiter "the 'Orchestrator' archetype" is deleted; the primary is now "the primary session agent"; the name refers exclusively to the new role. The agent-spawning grant is widened from "scout-eligible archetypes only" to include the Orchestrator as the sole non-scout exception.
+- **Phase 5 close-out** additionally seeds `orchestratorStepThreshold: 5` (never overwriting a user-tuned value).
+- **PhanesUpgrade v2.1** adds four v3.2 verification items (pinned block first-in-file with both entries, orchestrator agent present where plan execution is in the repertoire, config threshold present, workflow currency). The annotation pass stays out of upgrades, structure now, content lazily; it runs on the first post-upgrade `/phanes` update run.
+
+**Installed project impact:**
+- Affected: CLAUDE.md (pinned block prepended, §III rules 11-13 added on regeneration), .claude/agents/<projectSlug>-orchestrator.md (generate where plan execution applies), .phanes/config.json (orchestratorStepThreshold added), documentation/session-summaries/* (additive SUPERSEDED annotations on first update run), documentation/session-summaries/README.md (precedence line appended)
+- Breaking: no (all additions are additive; non-engaged runs behave exactly as v3.1)
+- Verify: project root CLAUDE.md line 1 is the PINNED DIRECTIVES marker; `.phanes/config.json` contains `"phanesVersion": "3.2"` and `orchestratorStepThreshold`; `/agents` lists `<projectSlug>-orchestrator` on plan-executing projects
+
+---
+
 ## v3.1 (2026-07-21)
 
 Minor version. Phanes gains a real upgrade path: version jumps now run through a production `/phanesupgrade` command instead of the retired migrator, and `phanes.md` stops silently overwriting itself.

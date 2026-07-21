@@ -1,7 +1,7 @@
-<!-- DOC | The install checklist Phanes works through when it fetches the v3.1 script template library. -->
-<!-- phanes-template v3.1 CHECKLIST -->
+<!-- DOC | The install checklist Phanes works through when it fetches the v3.2 script template library. -->
+<!-- phanes-template v3.2 CHECKLIST -->
 
-# Template install checklist (v3.1)
+# Template install checklist (v3.2)
 
 Phanes works through this list during Phase 2.5 Step 4 when it fetches the script template library, and mirrors the outcome of every item into the bootstrap session summary. This file ships pinned to the template version, so the checklist and the scripts can never fall out of step.
 
@@ -9,8 +9,8 @@ Provenance note: the scripts in this library take no path substitution. Each scr
 
 ## Items
 
-1. Platform detected. Only the matching variant set is fetched and installed; the other platform variant is not written into the project. The cross-platform `cli.js` dispatcher (v3.1) is fetched and installed on **every** platform (it is in both the `windows` and `posix` arrays of the manifest's `phanes` dispatcher entry).
-2. Every fetched file passes the sanity check before it lands: the stamp comment `# phanes-template v3.1 <name>` (or `rem phanes-template v3.1 <name>` for the `.cmd` shim) appears within the first two lines, after the shebang on POSIX or after `@echo off` in the `.cmd` shim. A 404 body or an HTML error page must never be written into `.phanes/scripts/`.
+1. Platform detected. Only the matching variant set is fetched and installed; the other platform variant is not written into the project. The cross-platform `cli.js` dispatcher (v3.2) is fetched and installed on **every** platform (it is in both the `windows` and `posix` arrays of the manifest's `phanes` dispatcher entry).
+2. Every fetched file passes the sanity check before it lands: the stamp comment `# phanes-template v3.2 <name>` (or `rem phanes-template v3.2 <name>` for the `.cmd` shim) appears within the first two lines, after the shebang on POSIX or after `@echo off` in the `.cmd` shim. A 404 body or an HTML error page must never be written into `.phanes/scripts/`.
 3. Manifest version equals this run's own line 1 stamp version. On a mismatch, treat it as a fetch failure and fall back to generating the scripts from the phanes.md Step 4 and Step 4b specifications.
 4. Files install into `.phanes/scripts/` keeping their variant extension (`.ps1` and `.cmd` on Windows, `.sh` on POSIX; `cli.js` on both). The platform dispatcher maps `<name>` to the platform file; the cross-platform `cli.js` forwards to it, so agents invoke `node .phanes/scripts/cli.js <name>` in any shell. The settings fragment references the filenames that carry the extension.
 5. POSIX only: the executable bit is set on every installed script.

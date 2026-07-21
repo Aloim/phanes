@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.1 module-list
+# phanes-template v3.2 module-list
 # Prints the configured module list, one per line, read from .phanes/config.json.
 
 find_root() {
