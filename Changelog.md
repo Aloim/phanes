@@ -18,7 +18,7 @@ Minor version. Phanes gains a real upgrade path: version jumps now run through a
 ### Changed
 - **Step 0 prompt-and-route.** When upstream is newer, `phanes.md` no longer overwrites installed command copies itself. It asks the user; yes stops the run and routes to `/phanesupgrade`, no proceeds on the stale spec and records the declined offer in the session summary TODOs, re-offered every run.
 - **Agent naming.** Agents are generated as `.claude/agents/<projectSlug>-<role>.md` with matching frontmatter `name:`. The prefix makes the project's own agents unambiguous next to plugin and user-level agents. `/phanesupgrade` renames legacy unprefixed agents and updates every reference.
-- **PhanesUpdateExperimental.md** reduced to a deprecation stub pointing at `PhanesUpgrade.md`; removed one release after v3.1.
+- **PhanesUpdateExperimental.md removed.** `PhanesUpgrade.md` fully replaces it; `phanes.md`'s legacy-migration pointer now routes to `/phanesupgrade`.
 
 **Installed project impact:**
 - Affected: .claude/commands/phanes.md (regenerate via /phanesupgrade), .claude/commands/phanesupgrade.md (generate), .claude/agents/* (rename to <projectSlug>-<role>), .phanes/config.json (phanesVersion, projectSlug added), .phanes/manifest.json (generate)
