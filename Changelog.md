@@ -112,7 +112,7 @@ Major version. It adds a consent layer over capability discovery, renames the cl
   - **Terminology collision removed:** "tier" now means exactly one thing in the document, the T1/T2/T3 workflow tiers.
   - Scripts keep their names (`regen-registry`, `api-diff`, `list-apis`); only output and read paths change. `api-diff` against a git ref now extracts the old surface from that ref's source rather than reading historical baseline files.
 - **API-contract awareness in the baseline:** for a project that exposes a network-facing API (HTTP/REST, GraphQL, gRPC), the baseline is extracted from the declared public contract, an OpenAPI/Swagger document, a GraphQL SDL, or `.proto` files, not from internal exported symbols, because the contract is what must not drift silently. Phase 1 detects the API surface (mirroring the UI-surface detection); `regen-registry` extracts it as its own baseline slice so `api-diff` flags a removed field or a changed response shape. Symbol extraction stays the default where no network API exists; a project that merely calls external APIs generates no slice.
-- **In-run migration for v2.0, v2.3 installs:** the next update run moves `tier2/*.md` up to `documentation/registry/` byte-identical (verified by git diff), regenerates the baseline into `.phanes/registry/`, deletes the generated `tier1/` folder (regenerate-class; nothing lost), and reindexes. No `/phanesupdate` required.
+- **In-run migration for v2.0, v2.3 installs:** the next update run moves `tier2/*.md` up to `documentation/registry/` byte-identical (verified by git diff), regenerates the baseline into `.phanes/registry/`, deletes the generated `tier1/` folder (regenerate-class; nothing lost), and reindexes. No `/phanesupdate` required. *(That command was removed in v3.1; version jumps now run through `/phanesupgrade`.)*
 
 ---
 
@@ -181,7 +181,7 @@ Major version. It adds a consent layer over capability discovery, renames the cl
 ## v2.0.2 (2026-07-10)
 
 ### Changed
-- `PhanesUpdate.md` renamed **`PhanesUpdateExperimental.md`**, the migration prompt has not been validated against real-world installations. Warnings added throughout: the prompt itself now refuses to run until the user confirms an external backup (remote push or full project copy) and explicitly acknowledges the risk; the README and `phanes.md`'s migration pointer carry the same warning. Treat a migration as **effectively irreversible** once the migration branch is merged.
+- `PhanesUpdate.md` renamed **`PhanesUpdateExperimental.md`**, the migration prompt has not been validated against real-world installations. Warnings added throughout: the prompt itself now refuses to run until the user confirms an external backup (remote push or full project copy) and explicitly acknowledges the risk; the README and `phanes.md`'s migration pointer carry the same warning. Treat a migration as **effectively irreversible** once the migration branch is merged. *(PhanesUpdateExperimental.md was removed in v3.1, fully replaced by `PhanesUpgrade.md`.)*
 
 ### Changed (branding)
 - Unified to plain **Phanes** across all published files; edition naming removed from the version stamps, README, and this changelog's header.
@@ -195,7 +195,7 @@ Major version. It adds a consent layer over capability discovery, renames the cl
 ## v2.0.1 (2026-07-10)
 
 ### Added
-- **`PhanesUpdate.md` v1.0**, the migration prompt for projects carrying a pre-v2.0 Phanes install. Self-updates your `/phanes` command from this repository, fingerprints the installed version, then migrates on a dedicated branch behind a generated, evidence-verified checklist. Accumulated knowledge (tier 2 annotations, session summaries, architecture snapshots) is preserved byte-for-byte; superseded artifacts are archived, never deleted; you review and merge the branch yourself.
+- **`PhanesUpdate.md` v1.0**, the migration prompt for projects carrying a pre-v2.0 Phanes install. Self-updates your `/phanes` command from this repository, fingerprints the installed version, then migrates on a dedicated branch behind a generated, evidence-verified checklist. Accumulated knowledge (tier 2 annotations, session summaries, architecture snapshots) is preserved byte-for-byte; superseded artifacts are archived, never deleted; you review and merge the branch yourself. *(Removed in v3.1, fully replaced by `PhanesUpgrade.md` and `/phanesupgrade`.)*
 - README: "Migrating an older install" section, step-by-step setup guide for first-time users, and this changelog.
 
 ### Changed
