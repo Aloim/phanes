@@ -2,6 +2,29 @@
 
 All notable changes to **Phanes**. The authoritative version marker is the stamp on the first line of `phanes.md`. Diff it against this repository before assuming your installed copy is current.
 
+> From v3.1 onward every entry closes with an **Installed project impact** block (Affected / Breaking / Verify). `/phanesupgrade` reads these blocks to build its upgrade brief; entries older than v3.1 are covered by the manifest diff instead.
+
+---
+
+## v3.1 (2026-07-21)
+
+Minor version. Phanes gains a real upgrade path: version jumps now run through a production `/phanesupgrade` command instead of the retired migrator, and `phanes.md` stops silently overwriting itself.
+
+### Added
+- **PhanesUpgrade v2.0** (`PhanesUpgrade.md`). Production upgrade taking ANY installed Phanes version to the newest release. It fetches the target spec and this changelog, detects the installed version (config field, stamp, or fingerprints), builds an upgrade brief from the changelog walk, computes archive/generate/regenerate sets from the installed-artifact manifest diff (synthesizing the manifest by inventory for older installs), executes on a `phanes-upgrade-<date>` branch with archive-never-delete, and hands all generation to the freshly installed spec. Evidence-verified checklist and byte-for-byte knowledge preservation carried over from the migrator; the warning gate is retired, a clean `git status` is the only precondition.
+- **Canonical version and slug fields.** Close-out now writes `phanesVersion` (single authoritative installed-version field) and `projectSlug` into `.phanes/config.json`.
+- **Installed-artifact manifest.** Close-out writes `.phanes/manifest.json` listing every Phanes-generated file with class and sha256. This is the removal authority for upgrades and the hash base for detecting hand-customized files that must be preserved.
+
+### Changed
+- **Step 0 prompt-and-route.** When upstream is newer, `phanes.md` no longer overwrites installed command copies itself. It asks the user; yes stops the run and routes to `/phanesupgrade`, no proceeds on the stale spec and records the declined offer in the session summary TODOs, re-offered every run.
+- **Agent naming.** Agents are generated as `.claude/agents/<projectSlug>-<role>.md` with matching frontmatter `name:`. The prefix makes the project's own agents unambiguous next to plugin and user-level agents. `/phanesupgrade` renames legacy unprefixed agents and updates every reference.
+- **PhanesUpdateExperimental.md** reduced to a deprecation stub pointing at `PhanesUpgrade.md`; removed one release after v3.1.
+
+**Installed project impact:**
+- Affected: .claude/commands/phanes.md (regenerate via /phanesupgrade), .claude/commands/phanesupgrade.md (generate), .claude/agents/* (rename to <projectSlug>-<role>), .phanes/config.json (phanesVersion, projectSlug added), .phanes/manifest.json (generate)
+- Breaking: no (agent renames are reference-updated by the upgrade run)
+- Verify: `.phanes/config.json` contains `"phanesVersion": "3.1"` and every agent filename starts with the project slug
+
 ---
 
 ## v3.0.1 (2026-07-21)

@@ -1,5 +1,5 @@
-<!-- Phanes v3.0.1 (2026-07-21). Single-file bootstrap prompt.
-     Installed copies self-update: Phase 0 Step 0 checks this stamp against upstream on every run and refreshes the install when a newer version has shipped.
+<!-- Phanes v3.1 (2026-07-21). Single-file bootstrap prompt.
+     Installed copies check this stamp against upstream on every run (Phase 0 Step 0) and offer /phanesupgrade when a newer version has shipped.
      Model rubric reviewed against: Haiku 4.5 / Sonnet 5 / Opus 4.8. Re-validate on every new model generation. -->
 
 # Phanes
@@ -182,11 +182,12 @@ IMPORTANT: **YOU MUST** not skip any steps. Follow all steps and infer best prac
 
 3. **Compare numerically.** Parse `v<major>.<minor>[.<patch>]` from both stamps (a missing patch component counts as 0) and compare component-wise. **NEVER** compare version strings lexically.
 
-   * **Upstream newer →** sanity-check the download first: the file **MUST** begin with `<!-- Phanes v`. A 404 body, an HTML error page, or a truncated fetch must never clobber a working install, if the check fails, treat it as a fetch failure below. Then overwrite **every** installed copy found: project-level `.claude/commands/phanes.md` and user-level `~/.claude/commands/phanes.md` (Windows: `$env:USERPROFILE\.claude\commands\phanes.md`). If **no** copy exists at either path (renamed or nonstandard install), do **NOT** stop, you cannot refresh what you cannot find, and stopping would re-run the same stale prompt forever; record the newer upstream version and the standard reinstall command in the session summary's TODO section and proceed with the run. Otherwise **STOP** and tell the user (verbatim, substituting the real version numbers and the refreshed path(s), do not paraphrase):
+   * **Upstream newer →** sanity-check the download first: the file **MUST** begin with `<!-- Phanes v`. A 404 body, an HTML error page, or a truncated fetch must never be treated as a release, if the check fails, treat it as a fetch failure below. Then **ASK the user** (verbatim, substituting real versions):
 
-     > "Phanes self-updated: vX.Y.Z → vA.B.C (refreshed: <path(s)>). Re-run `/phanes` now so this run executes the newest spec. Nothing else in your project was modified by this run."
+     > "A newer Phanes is published: vX.Y.Z (installed) → vA.B.C (upstream). Upgrade now? The upgrade runs as its own command, touches only Phanes-owned artifacts, and preserves all project knowledge. (yes / no)"
 
-     Do **NOT** proceed to any later step or phase, stopping here has zero project side effects because the run-state marker has not been touched.
+     * **User answers yes →** **STOP** immediately and tell them (verbatim): "Run `/phanesupgrade` to bring this installation to vA.B.C. This run has made no changes and the run-state marker was not touched." **DO NOT** overwrite any installed command file yourself, the upgrade command owns every file replacement. If `/phanesupgrade` is not installed, give the fetch command for the platform first: `curl -fsSL https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpgrade.md -o ~/.claude/commands/phanesupgrade.md` (Windows: `Invoke-WebRequest -Uri https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpgrade.md -OutFile "$env:USERPROFILE\.claude\commands\phanesupgrade.md"`).
+     * **User answers no →** proceed with this (stale) spec. Record the declined upgrade in the session summary's TODO section as one line: `Upgrade declined: vX.Y.Z installed, vA.B.C upstream, <date>. Re-offer next run.` The offer repeats on every future run until taken.
    * **Same version →** proceed. One line: "Version check: vX.Y.Z is current."
    * **Local newer than upstream →** proceed without downgrading, this is a developer working copy. **NEVER** downgrade.
    * **Fetch fails** (offline, rate-limited, repository unreachable) **→** graceful degradation, **NO** stop gate: proceed with the run and record the failed check plus the retry command in the session summary's TODO section, exactly as with a failed MCP install.
@@ -955,11 +956,11 @@ The `description` field is an imperatively written field that the primary agent 
 
 #### Sub-Agent Definition Template
 
-Generate and save each definition to `.claude/agents/<name>.md`.
+Generate and save each definition to `.claude/agents/<projectSlug>-<role>.md` (slug from `.phanes/config.json`, e.g. `blueprompt-executor.md`). The frontmatter `name:` field **MUST** equal the filename stem. **NEVER** generate an unprefixed agent: the prefix guarantees the project's own agents are unambiguous next to plugin agents and any user-level agents, and makes provenance visible in every dispatch. Unprefixed agents that match the Phanes template shape are legacy artifacts, `/phanesupgrade` renames them. Foreign (user-authored) agents keep their names untouched, as ruled in Phase 0.
 
 ```
 ---
-name: <sub-agent-name>
+name: <projectSlug>-<role>   # MUST equal the filename stem, e.g. blueprompt-executor
 description: "Provides [concise capability/purpose]. MUST BE USED for [hard-trigger topics or cues]. Use PROACTIVELY when you hear [trigger keywords / scenario examples]. ≤50 words total."
 color: <color-choice>  # Essential for visual tracking in team operations
 model: sonnet | opus | haiku  # Must be defined using the Model & Effort Selection rubric
@@ -1116,6 +1117,8 @@ The Phase 2.5 infrastructure is what makes this enforcement mechanical rather th
 ### Phase 5: DEEP BREATH, Increment Run Counter, Sign Off
 
 * Increment hidden .claude/.phanes file contents.
+* **Version stamp:** write `phanesVersion` (this spec's line-1 version, digits only, e.g. `"3.1"`) and `projectSlug` into `.phanes/config.json`. `projectSlug` rule: lowercase project root folder name reduced to `[a-z0-9-]`; on an initial setup run ask the user once, "Agent name prefix will be `<slug>-` (e.g. `<slug>-executor`). Keep or shorten?"; on update runs derive it silently if absent and never re-ask. `phanesVersion` is the single authoritative installed-version field, `/phanesupgrade` reads it before anything else.
+* **Installed-artifact manifest:** write `.phanes/manifest.json` listing EVERY file this run generated or regenerated (agents, workflows, scripts, templates, hooks, command files, doc scaffolds), schema: `{manifestVersion: 1, phanesVersion, stampedAt, projectSlug, artifacts: [{path, class, sha256, customized}]}` with `class` one of `agent | workflow | script | template | command | hook | config-block | doc-scaffold`. Compute sha256 per file (PowerShell: `Get-FileHash -Algorithm SHA256`; POSIX: `sha256sum`). Knowledge-class files (tier 2 registry, session summaries, architecture snapshots, archive, CLAUDE.local.md) are NEVER listed, they are project property, not Phanes-owned. This manifest is what makes future upgrades mechanical: `/phanesupgrade` diffs it against the target spec's output set to know exactly what to archive, generate, and regenerate, and uses the hashes to detect hand-customized files it must preserve.
 * Close the run-progress ledger: append `CLOSED, run complete` to `.phanes/run-progress` (Compaction Survival, §II).
 * Record the run's **fan-out ledger** in the session summary, sub-agents spawned per phase and the peak number in flight at once (Bounded Fan-Out, §II).
 * **On an initial setup run, and on ANY run that created or repaired hook entries, you MUST close by telling the user (verbatim, do not paraphrase):**

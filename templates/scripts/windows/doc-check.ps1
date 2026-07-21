@@ -1,4 +1,4 @@
-# phanes-template v3.0.1 doc-check
+# phanes-template v3.1 doc-check
 # Scans the documentation tree (archive/ excluded) for living documents over the 500-line ceiling
 # or missing a DOC header line, for folders holding docs but no _index.md, and for indexes older
 # than their newest sibling. Prints offenders with line counts. Frozen artifact classes (session

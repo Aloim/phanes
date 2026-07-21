@@ -13,7 +13,7 @@ It is not something you install once and forget. Think of it as a living specifi
 | Your situation | What to use |
 | --- | --- |
 | A fresh project, or any project that has no Phanes yet | Use `phanes.md` and run `/phanes` for the full setup. Running it again also keeps a current install up to date. |
-| A project that already carries an older Phanes (for example a v1 install) | Use `PhanesUpdateExperimental.md` and run `/phanesupdate` to migrate. ⚠️ It is **experimental, and effectively irreversible once the migration branch is merged, so a full backup is mandatory** (see [Migrating an older install](#migrating-an-older-install-experimental) below). It first refreshes your installed `/phanes` command from this repository so you migrate onto the newest spec, then upgrades the project's entire Phanes structure (agents, scripts, hooks, workflows, and the documentation tree) behind a strict, generated, per-item-verified checklist. Your accumulated knowledge (session summaries, registry annotations, and snapshots) is preserved and indexed, never rewritten. |
+| A project that already carries an older Phanes (any version) | Use `PhanesUpgrade.md` and run `/phanesupgrade` (see [Upgrading an older install](#upgrading-an-older-install) below). It refreshes your `/phanes` command, then upgrades the whole Phanes structure on a dedicated branch behind an evidence-verified checklist. Your accumulated knowledge is preserved, never rewritten. |
 
 **Contents**
 
@@ -22,7 +22,7 @@ It is not something you install once and forget. Think of it as a living specifi
 - [Core principles enforced by Phanes](#core-principles-enforced-by-phanes)
 - [For inexperienced users: step-by-step from zero](#for-inexperienced-users-step-by-step-from-zero)
 - [How to install](#how-to-install)
-- [Migrating an older install (⚠️ experimental)](#migrating-an-older-install-experimental)
+- [Upgrading an older install](#upgrading-an-older-install)
 - [Companion tools](#companion-tools)
 - [Recommended third-party enhancements](#recommended-third-party-enhancements)
 - [Version](#version) · [License](#license) · [Contributing](#contributing)
@@ -33,7 +33,7 @@ It is not something you install once and forget. Think of it as a living specifi
 
 The first time you run `/phanes` in a repository, the prompt walks Claude Code through a strict setup in several phases.
 
-**1. Pre-flight.** Before anything else, the run checks itself. It fetches this repository's `phanes.md`, compares version stamps, refreshes every installed copy when a newer version has shipped, and stops with a re-run notice, so no run ever executes a stale spec.
+**1. Pre-flight.** Before anything else, the run checks itself. It fetches this repository's `phanes.md` and compares version stamps. If a newer version has shipped, it asks whether you want to upgrade: accept and it stops and routes you to `/phanesupgrade`, decline and it proceeds on the installed version.
 
 It then installs the four MCP servers it benefits from:
 
@@ -42,9 +42,9 @@ It then installs the four MCP servers it benefits from:
 - `semble` for hybrid code search, so an agent finds the exact snippet it needs instead of sweeping a whole module with grep and reading entire files.
 - `serena` for symbol-level code navigation, installed on the first run. It runs through `uv`, which the pre-flight also installs if it is missing.
 
-These servers are enhancements, not hard dependencies. If one fails to install, the run records a TODO and continues in a degraded mode rather than halting. There are exactly four of them on purpose. Every MCP tool schema costs context in every session, so each server has to earn its place by removing more context than its schema costs. `semble` is the clearest case: two small tools weighed against the single largest token sink in a run. Every generated agent also carries a usage rubric that says when each server saves tokens and when to make no MCP call at all.
+These servers are enhancements, not hard dependencies. If one fails to install, the run records a TODO and continues in a degraded mode. There are exactly four on purpose: every MCP tool schema costs context in every session, so each server has to earn its place by removing more context than its schema costs. Every generated agent carries a usage rubric saying when each server saves tokens and when to make no MCP call at all.
 
-The pre-flight detects your platform first and runs the matching commands: bash on POSIX systems, PowerShell on Windows. It runs a capability census of what you already have installed, including MCP servers, plugins, skills, and slash commands, and it probes each server to see whether it is actually reachable and authenticated rather than merely configured. On a first run it then asks you once, as a single checklist, which of those capabilities Phanes may build policy around: the four servers above plus `frontend-design` come pre-selected as recommended, and every other tool you have is listed by name for you to opt in or leave out. Your choice is saved, so later runs stay silent unless the set actually changes, and then they ask only about what changed. Phanes only ever builds a mandate around a capability you selected and that the census found reachable, which is what keeps a required-tool rule from ever pointing at a tool that is switched off or signed out. Nothing you installed is ever changed or removed. It also ensures the official `frontend-design` skill is present, since skills cost no context until they are invoked, so UI and frontend work runs with deliberate design guidance loaded. Finally, each run keeps a progress ledger on disk at `.phanes/run-progress`, so a session that dies or compacts mid-bootstrap resumes from the last completed phase instead of starting over blind.
+The pre-flight detects your platform (bash on POSIX, PowerShell on Windows), then runs a capability census of what you already have installed, probing each MCP server for actual reachability and authentication rather than mere configuration. On a first run it asks you once, as a single checklist, which of those capabilities Phanes may build policy around; the choice is saved, and later runs ask only about changes. Phanes only ever builds a mandate around a capability you selected and the census found reachable, and nothing you installed is ever changed or removed. It also ensures the official `frontend-design` skill is present (skills cost no context until invoked). Finally, each run keeps a progress ledger at `.phanes/run-progress`, so a session that dies or compacts mid-bootstrap resumes from the last completed phase.
 
 **2. Repository comprehension.** Phanes reads the README, the source tree, the configs, and the CI to work out the project's real purpose, its primary language, its build system, and its module boundaries. Directories that are not part of the core product, such as vendored dependencies, example packs, and demo content, are filtered out.
 
@@ -106,7 +106,7 @@ Visualized, that chain looks like this. A task's tier changes only how deep the 
 
 > **After the first run, restart your Claude Code session.** Hook configuration is snapshotted when a session starts, so the enforcement hooks arm on the next session. Phanes reminds you of this verbatim at the end of the run.
 
-When you run `/phanes` again, it detects the existing install through the `.claude/.phanes` marker and upgrades in place. Agents, workflows, scripts, hooks, and READMEs are all measured against the latest `phanes.md` and refreshed wherever they have drifted. An install created by v1 is detected and routed to the experimental updater (see [Migrating an older install](#migrating-an-older-install-experimental)).
+When you run `/phanes` again, it detects the existing install through the `.claude/.phanes` marker and refreshes in place. Agents, workflows, scripts, hooks, and READMEs are all measured against the latest `phanes.md` and refreshed wherever they have drifted. If a newer Phanes has been published, the run stops first and asks whether you want to upgrade; accept and it routes you to `/phanesupgrade` (see [Upgrading an older install](#upgrading-an-older-install)), decline and the run proceeds on the installed version.
 
 ## How to use
 
@@ -279,28 +279,28 @@ The default `.gitignore` shipped with this repository excludes `.claude/`, `.pha
 
 ---
 
-## Migrating an older install (EXPERIMENTAL)
+## Upgrading an older install
 
-> ⚠️ **PhanesUpdate is experimental. It has not been validated against real-world installations, so treat a migration as effectively irreversible once the migration branch is merged.** Before you run it, commit or stash everything, push your repository to a remote or take a full copy of the project folder, and proceed only on a project you can restore from that backup. The prompt refuses to start until you acknowledge this.
-
-If a project already carries a pre-v2.0 Phanes installation, install the updater alongside `/phanes`:
+If a project already carries an older Phanes installation (any version), install the upgrader alongside `/phanes`:
 
 **Linux / macOS:**
 
 ```bash
-curl -L https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdateExperimental.md \
-  -o ~/.claude/commands/phanesupdate.md
+curl -L https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpgrade.md \
+  -o ~/.claude/commands/phanesupgrade.md
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpdateExperimental.md `
-  -OutFile "$env:USERPROFILE\.claude\commands\phanesupdate.md"
+  -Uri https://raw.githubusercontent.com/Aloim/phanes/main/PhanesUpgrade.md `
+  -OutFile "$env:USERPROFILE\.claude\commands\phanesupgrade.md"
 ```
 
-Then back up your project, open it, and run `/phanesupdate`. It refreshes your `/phanes` command from this repository, fingerprints the installed version, and migrates the structure on a dedicated branch behind a generated, evidence-verified checklist. Your accumulated knowledge, including registry annotations, session summaries, and snapshots, is preserved byte for byte. Superseded artifacts are archived, never deleted. You review and merge the branch yourself, so **verify it thoroughly before merging, because the merge is the point of no return**.
+Then open the project and run `/phanesupgrade`. It refreshes your `/phanes` command, detects the installed version, plans the jump from the changelog, and computes exactly what to archive, generate, and regenerate from the installed-artifact manifest. Everything runs on a dedicated `phanes-upgrade-<date>` branch behind an evidence-verified checklist. Your accumulated knowledge is preserved byte for byte, superseded artifacts are archived rather than deleted, and you review and merge the branch yourself. The only precondition is a clean `git status`.
+
+You normally get here from `/phanes` itself: whenever a newer Phanes has shipped, the version check at the start of every run offers the upgrade and routes you here.
 
 ---
 
@@ -308,16 +308,16 @@ Then back up your project, open it, and run `/phanesupdate`. It refreshes your `
 
 Phanes is built to stay modular. Rather than growing the core file, capabilities beyond bootstrapping ship as **companion tools**. Every companion is a full standalone tool that works on its own, in any repository, with no Phanes install. Each one is also built to cooperate with the structures Phanes generates, so together they form one ecosystem.
 
-- **[Charon](https://github.com/Aloim/charon)** finds dead code, unused files, unused dependencies, and duplicated code, then writes an evidence-backed audit report without touching anything. It is a standalone `/charon` command that works in any repository. In a Phanes-managed project it goes further and cooperates with the structures Phanes builds: the report is filed into the documentation tree, open items land in the session summary, and dead exported APIs are proposed as registry annotations so the agent team stops routing new work onto them. It is worth running before large refactors and after big migrations, because stale code is context poison for agents.
-- **[Philia](https://github.com/Aloim/philia)** shares a Windows terminal in the browser for collaborative or remote vibecoding sessions. You get a password-protected public link, shared terminal tabs, and a side chat, all tunneled from your own PC with nothing for your guests to install. It is fully standalone, but it pairs naturally with Phanes. Share a Phanes-managed project and everyone on the link watches and drives the same fully wired agent team together, coordinating in the chat, while the host keeps a kill switch and a live on-screen indicator.
-- **[Mosyn](https://github.com/Aloim/mosyn)** gives Claude Code agents a shared, disciplined project memory on decentralized storage (Walrus and SEAL). Agents recall relevant facts before acting, log every decision and failure as it happens, and distill each session into schema-locked facts with an append-only audit trail. It works on its own as a protocol prompt plus a command pack in any project. Alongside Phanes it hands the whole generated agent team one durable memory that persists across sessions, machines, and teammates.
-- **[Metis](https://github.com/Aloim/metis)** is a session-audit companion that reads Claude Code's own run transcripts and reports whether your agent team actually used the tools and workflows it was told to. It harvests the short-lived subagent transcripts before the harness discards them, then diffs the mandated behavior against what really happened, such as a tool that was required but never called, a server that was configured but never used, or an agent that was never spawned. It runs on its own as a `/metis` command in any Claude Code project. In a Phanes-managed project it does more: Phanes detects it during the capability census and, on an update run, has it harvest the transcripts, verify its own past suggestions against the new sessions, and file an adherence report the run then acts on. It ships alongside this release at [github.com/Aloim/metis](https://github.com/Aloim/metis).
+- **[Charon](https://github.com/Aloim/charon)** finds dead code, unused files, unused dependencies, and duplicated code, then writes an evidence-backed audit report without touching anything. Standalone `/charon` command for any repository; in a Phanes-managed project the report is filed into the documentation tree, open items land in the session summary, and dead exported APIs are proposed as registry annotations. Worth running before large refactors, since stale code is context poison for agents.
+- **[Philia](https://github.com/Aloim/philia)** shares a Windows terminal in the browser for collaborative or remote vibecoding: a password-protected public link, shared terminal tabs, and a side chat, tunneled from your own PC with nothing for guests to install. Share a Phanes-managed project and everyone drives the same agent team together, while the host keeps a kill switch and a live indicator.
+- **[Mosyn](https://github.com/Aloim/mosyn)** gives Claude Code agents a shared, disciplined project memory on decentralized storage (Walrus and SEAL): recall before acting, decision and failure logging, and schema-locked session distillation with an append-only audit trail. Alongside Phanes it hands the whole agent team one durable memory across sessions, machines, and teammates.
+- **[Metis](https://github.com/Aloim/metis)** reads Claude Code's own run transcripts and reports whether your agent team actually used the tools and workflows it was told to, harvesting the short-lived subagent transcripts before the harness discards them. Standalone `/metis` command; in a Phanes-managed project the capability census detects it, and update runs have it verify past suggestions and file an adherence report the run acts on.
 
 ---
 
 ## Recommended third-party enhancements
 
-Phanes never installs these. The Phase 0 capability inventory discovers them only if you have installed them yourself, and the Phase 3 matching rubric wires them into exactly the agents whose duties they serve, under least privilege, with a named fallback, and never as a hard dependency. All of them were verified as actively maintained on 2026-07-15, so re-check before you adopt one. Code search is not on this list, because Phanes now installs `semble` itself in the pre-flight. If you already run a rival code-index server, it is granted only where it beats `semble` for your stack, and in that case `semble` is not granted alongside it, since one job should carry one schema tax.
+Phanes never installs these. The capability census discovers them only if you installed them yourself, and the matching rubric wires them into exactly the agents whose duties they serve, under least privilege and never as a hard dependency. All were verified as actively maintained on 2026-07-15, so re-check before adopting one. Code search is absent because Phanes installs `semble` itself; a rival code-index server is granted only where it beats `semble` for your stack, and then in its place, since one job should carry one schema tax.
 
 - **Shell-output compressors** (for example RTK) run as a PreToolUse proxy that strips noise from build, test, and git output before it reaches any agent's context, while preserving errors and diffs in full. In measurements from July 2026 this removed about 89 percent of the noise on average. It helps every agent that runs shell commands and needs no Phanes wiring at all.
 - **Usage monitors** (for example claude-hud and claude-monitor) show live context fill and rate-limit forecasting alongside long multi-agent runs. They are purely observational and cost no tokens, which makes them useful company for any Phanes bootstrap on a subscription plan.
@@ -327,9 +327,9 @@ Phanes never installs these. The Phase 0 capability inventory discovers them onl
 
 ## Version
 
-Current: **v3.0.1** (2026-07-21). A patch over v3.0 that corrects how reasoning effort is described and adds a temporary way to give the deepest agents their own effort level. Effort is set once per session at launch; the orchestrator runs at that level and its in-session sub-agents ride it, while the few heaviest agents (the architect, the synthesizer, and security-critical critics) can be spawned as their own background processes at a higher level, until Claude Code supports per-agent effort natively. Everything below is v3.0.
+Current: **v3.1** (2026-07-21). Phanes gains its real upgrade path. The version check at the start of every run now asks before it changes anything and routes version jumps to the new `/phanesupgrade` command, which plans from the changelog, computes exact file operations from an installed-artifact manifest, and runs on a branch you merge yourself. Agents are named with a project prefix (`<projectSlug>-<role>`) so a project's own team is unambiguous next to plugin and user-level agents. The old trial migrator is retired.
 
-v3.0 is the major release beneath it. It adds a consent layer over capability discovery, renames the close-time verifier, and makes the command line reachable from any shell. On a first run Phanes now takes a census of the tools you already have, checks whether each one is actually reachable, and asks you once, as a single checklist, which of them it may build policy around, so a required-tool rule can never point at a tool you did not choose or that is not signed in. The old `api-monitor` agent becomes `close-verifier`, with a duty list that matches what it really does at a close: it re-derives the API baseline, re-runs the build check itself instead of trusting the coder's report, and confirms that what was applied is what was approved. A small `cli.js` launcher, installed on every platform, gives agents one command, `node .phanes/scripts/cli.js`, that behaves the same in PowerShell, cmd, and Git Bash, which fixes a real case where a bare `phanes` was not found inside a sub-agent shell. The model rubric is re-grounded on a tier-first policy. See the version stamp at the top of `phanes.md` for the exact version. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
+Beneath it: v3.0.1 corrected the reasoning-effort rubric and added a CLI-spawn bridge for per-agent effort; v3.0 added the capability consent layer, the `close-verifier` rename, and the cross-shell `cli.js` launcher. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
 
 ---
 
