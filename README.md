@@ -4,7 +4,9 @@
 
 It is not something you install once and forget. Think of it as a living specification that you re-run. Each time you invoke `/phanes`, it surveys the project again, upgrades the existing sub-agents, fills in any missing infrastructure, and bumps a hidden run counter. The result is an agentic team that grows with your codebase instead of rotting beside it.
 
-**The prompt is one file.** You install a single Markdown file, `phanes.md`, as your `/phanes` command. The scripts, hooks, agents, and documents it sets up are created inside your repository during the run. The scripts that do not depend on your project's language are fetched as tested templates from this repository, pinned to the prompt's own version, and everything else is generated. If the fetch cannot happen, the run generates the scripts as well, so an offline install is still complete.
+**The prompt is one file.** You install a single Markdown file, `phanes.md`, as your `/phanes` command. The scripts, hooks, agents, and documents it sets up are created inside your repository during the run. The scripts that do not depend on your project's language, and the agent and report prompt templates, are fetched as tested templates from this repository, pinned to the prompt's own version, and everything else is generated. If the fetch cannot happen, the run generates those as well, so an offline install is still complete.
+
+**Recommended model Opus 5, recommended effort `medium`.** Launch with `claude --model opus --effort medium`. Effort is set once at session launch and governs the session and everything it spawns, so this one dial is the whole setting. The agents carry their own effort levels relative to it: `medium` counts as the baseline every agent is authored against, and the Orchestrator lifts an individual agent one rung where a step earns it. See [How to use](#how-to-use) for the details.
 
 **Modular by design.** The core stays that one file on purpose. Anything beyond bootstrapping ships as a separate [companion tool](#companion-tools). Each companion works on its own in any repository, with no Phanes install at all, and each one snaps into the structures Phanes builds the moment it lands in a Phanes-managed project.
 
@@ -88,9 +90,19 @@ Visualized, that chain looks like this. Where the work enters depends on its sha
               │                             │  batch of 1 to 3     │
               │                             │  consecutive steps,  │
               │                             │  never across a      │
-              │                             │  phase boundary      │
+              │                             │  phase boundary;     │
+              │                             │  workers persist for │
+              │                             │  the batch, resumed  │
+              │                             │  not respawned       │
               │                             ╰──────────┬───────────╯
               │                                        │  per step in the batch
+              │                                        │
+              │                                        │  the first step's planner
+              │                                        │  reports back how big the
+              │                                        │  work really turned out to
+              │                                        │  be, and the batch is
+              │                                        │  resized to match  ***
+              │                                        │
               ╰───────────────────┬────────────────────╯
                                   │
                                   ▼   triaged into a tier
@@ -108,6 +120,7 @@ Visualized, that chain looks like this. Where the work enters depends on its sha
                                   │
                                   ▼
                             Critic         two verdicts: spec compliance + quality
+                                           (may fix trivia itself, bounded, audited)
                                   │
                                   ▼
                             close-verifier regenerate API baseline  (T2 / T3 only)
@@ -125,6 +138,9 @@ Visualized, that chain looks like this. Where the work enters depends on its sha
           main session, which is why a long plan can run for hours without the
           session filling up and compacting. Single tasks and short plans skip
           the Orchestrator entirely and return straight to you.
+      *** The opening batch size is a guess made before any design exists. Once
+          the first step is actually designed, the planner knows better and says
+          so, and the batch grows or shrinks within the 1 to 3 band.
 ```
 
 **This is the shape Phanes is built for.** The setup pays off most when you write a plan first, broken into numbered steps and grouped into phases, and then let the run work through it. Give each step a clear boundary and each phase a clear exit condition, hand the plan to Phanes, and the Orchestrator will size its own batches, route every step to the right tier, and keep the review chain intact from the first step to the last. A vague single sentence still works, it simply gives the machinery much less to hold onto.
@@ -141,7 +157,7 @@ When you run `/phanes` again, it detects the existing install through the `.clau
 
 Type `/phanes` in your project. It scans the repository and builds the whole agentic team and documentation structure around it. Three things make the first run land well.
 
-- **Start the session at high reasoning effort.** Reasoning effort is set once, when the session launches, and it governs the primary session and every sub-agent it spawns in that session. Launch with `claude --effort high` (or export `CLAUDE_CODE_EFFORT_LEVEL=high` before starting), and use `xhigh` for design-heavy runs where you expect a lot of architecture work. **`high` is the recommended default for Phanes**, because the run spends most of its time on routing and structural judgment, where a cheap reasoning pass costs far more in rework than it saves. Set it at launch rather than mid-run: changing effort mid-session writes to your global settings and leaks into other projects and parallel sessions.
+- **Start the session on Opus 5 at medium reasoning effort.** Reasoning effort is set once, when the session launches, and it governs the primary session and every sub-agent it spawns in that session. Launch with `claude --model opus --effort medium` (or export `CLAUDE_CODE_EFFORT_LEVEL=medium` before starting). **Opus 5 at `medium` is the recommended base for Phanes from v3.3 on**, because effort is relative now: agents are authored as rungs against your dial, and the Orchestrator lifts an agent one rung for a hard step (a security-critical review, cross-module design, a second attempt after a failed review), so you buy depth where a step earns it instead of everywhere. Pick `high` or `xhigh` only when you want the entire run hotter. Set it at launch rather than mid-run: changing effort mid-session writes to your global settings and leaks into other projects and parallel sessions.
 - **Give it something to read, ideally a plan.** On an empty or brand-new repository, create at least a `plan.md` that describes what you want to build. Phanes reads it to understand the project's purpose and shapes the entire setup, including the agents, the workflows, and the module layout, around the project you actually intend to build rather than around an empty folder. **Best results come from a plan written as numbered steps grouped into phases**, each step with a clear boundary and each phase with a clear exit condition. That is the shape the run is designed to consume, and it is what lets the Orchestrator batch the work cleanly once execution starts (see the [diagram above](#what-it-does)).
 - **Steer it if you like.** Anything you type right after the command is treated as a directive and takes priority over the defaults, so you can inject your own needs into the setup. For example: `/phanes focus on the api/ module; skip pre-commit hook install`.
 
@@ -297,7 +313,7 @@ your-repo/
 │  ├─ agents/            #   6-10 deeply scoped expert personas
 │  ├─ workflows/         #   YAML agent chains: the single source of truth
 │  ├─ settings.json      #   stamp-guard (blocking) + size-check (advisory) hooks
-│  ├─ template/          #   report.md used by every sub-agent
+│  ├─ template/          #   fetched prompt templates: agent-definition.md + report.md
 │  └─ .phanes            #   run counter + install-state marker (hidden)
 ├─ CLAUDE.md             # root: orchestration mandates; modules: local guidance
 └─ CLAUDE.local.md       # live register of work in motion (35k/40k char budget)
@@ -355,9 +371,9 @@ Phanes never installs these. The capability census discovers them only if you in
 
 ## Version
 
-Current: **v3.2.1** (2026-07-26). A small alignment release for the new **Claude Opus 5** model. The Model & Effort rubric now names Opus 5 in place of Opus 4.8 at every Opus-tier assignment; the use cases behind those assignments are unchanged, so no installed project needs to be rebuilt. The README also gained a session-effort recommendation, and its workflow diagram now shows where the Orchestrator picks up a multi-step plan.
+Current: **v3.3** (2026-07-26). Four corrections to the orchestration economics, one shared root: stop paying fixed costs where a per-step judgment is cheaper and better informed. **Batch renegotiation:** the Orchestrator's batch-size estimate is formed from the plan's step list before any design exists, a guess by the agent with the least information, so the architect that plans the batch's **first** step now reports back what the work actually turned out to be and the batch is resized to match, adopted by default, overridden only when a hard limit is in the way. **Agent persistence:** worker agents persist for the life of a batch and are resumed rather than respawned, so a rework loop returns to the agent that wrote the code and a later review returns to the reviewer that gave the earlier verdicts, each avoided respawn saving a measured entry tax of roughly 80,000 tokens. **Bounded self-fix:** the Critic may fix trivia from its own review directly (typos, imports, metadata, at most a couple dozen lines), mechanically checked, diff attached, Orchestrator informed; real changes still take the full review loop. **Relative effort:** the recommended launch becomes Opus 5 at `medium`, agents are authored as rungs relative to your dial instead of absolute levels, and the Orchestrator may lift an agent one rung for a step that earns it, at most twice per batch, each firing recorded. Plus a trim target that makes hot-file cropping a rare event instead of a standing tax, and one number for the whole framework: PhanesUpgrade now carries the Phanes version.
 
-Beneath it: v3.2 added the top-anchored, delete-protected **Pinned Directives block** as the first content of every project's root `CLAUDE.md`, a **procedure-precedence rule** with a supersession-annotation pass, and the ephemeral **Orchestrator** that executes long plan runs in self-sized batches so the primary session stays slim enough to run across many phases without compacting; v3.1 gave Phanes its real upgrade path, routing version jumps to `/phanesupgrade` (plan from the changelog, exact file operations from an installed-artifact manifest, on a branch you merge yourself) and prefixing agents with the project slug; v3.0.1 corrected the reasoning-effort rubric and added the CLI-spawn bridge for per-agent effort; v3.0 added the capability consent layer, the `close-verifier` rename, and the cross-shell `cli.js` launcher. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
+Beneath it: v3.2.1 aligned the Model & Effort rubric with **Claude Opus 5** and added the session-effort recommendation and the Orchestrator branch in the workflow diagram; v3.2 added the top-anchored, delete-protected **Pinned Directives block** as the first content of every project's root `CLAUDE.md`, a **procedure-precedence rule** with a supersession-annotation pass, and the ephemeral **Orchestrator** that executes long plan runs in self-sized batches so the primary session stays slim enough to run across many phases without compacting; v3.1 gave Phanes its real upgrade path, routing version jumps to `/phanesupgrade` (plan from the changelog, exact file operations from an installed-artifact manifest, on a branch you merge yourself) and prefixing agents with the project slug; v3.0.1 corrected the reasoning-effort rubric and added the CLI-spawn bridge for per-agent effort; v3.0 added the capability consent layer, the `close-verifier` rename, and the cross-shell `cli.js` launcher. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
 
 ---
 
