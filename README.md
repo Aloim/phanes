@@ -71,36 +71,63 @@ The pre-flight detects your platform (bash on POSIX, PowerShell on Windows), the
 
 **6. Workflow codification.** The YAML files in `.claude/workflows/` are the single source of truth for how agents chain together. Every chain ends the same way: the Synthesizer runs for parallel work only, then the Critic, then `close-verifier` on T2 and T3 changes, then the primary agent. Because of that ordering, the artifact that gets applied is always the one that was audited. Phanes also updates `CLAUDE.md`, at the project root and at module roots only, so the primary agent knows how to triage, delegate, navigate the documentation by index, and review.
 
-Visualized, that chain looks like this. A task's tier changes only how deep the review goes and how much documentation it produces, never whether the review happens:
+Visualized, that chain looks like this. Where the work enters depends on its shape: a single task is triaged and run directly, while a multi-step plan is handed to an ephemeral **Orchestrator** that walks the plan in small batches. A task's tier changes only how deep the review goes and how much documentation it produces, never whether the review happens:
 
 ```text
-                             task
-                              │
-                              ▼   triaged into a tier
-        ╭─────────────────────────────────────────╮
-        │ T1  one file      lightweight review    │
-        │ T2  one module    full review           │
-        │ T3  cross-module  full review + snapshot│
-        ╰─────────────────────┬───────────────────╯
-                              │
-                              ▼   specialists: bounded fan-out, ≤ 5 parallel
-              Analyzer · Planner · Patch-Author · …   (tuned to your stack)
-                              │   each emits a report + proposed diff, never applies
-                              ▼
-                        Synthesizer    consolidate parallel perspectives  *
-                              │
-                              ▼
-                        Critic         two verdicts: spec compliance + quality
-                              │
-                              ▼
-                        close-verifier regenerate API baseline  (T2 / T3 only)
-                              │
-                              ▼
-                        Executor       apply the audited diff, and only that
+                          what you asked for
+                                  │
+              ╭───────────────────┴────────────────────╮
+              │                                        │
+        a single task                          a multi-step plan
+        (or a short plan,                      (5 or more steps)
+         4 steps or fewer)                             │
+              │                                        ▼
+              │                             ╭──────────────────────╮
+              │                             │  Orchestrator        │
+              │                             │  ephemeral, one per  │
+              │                             │  batch of 1 to 3     │
+              │                             │  consecutive steps,  │
+              │                             │  never across a      │
+              │                             │  phase boundary      │
+              │                             ╰──────────┬───────────╯
+              │                                        │  per step in the batch
+              ╰───────────────────┬────────────────────╯
+                                  │
+                                  ▼   triaged into a tier
+            ╭─────────────────────────────────────────╮
+            │ T1  one file      lightweight review    │
+            │ T2  one module    full review           │
+            │ T3  cross-module  full review + snapshot│
+            ╰─────────────────────┬───────────────────╯
+                                  │
+                                  ▼   specialists: bounded fan-out, ≤ 5 parallel
+                  Analyzer · Planner · Patch-Author · …   (tuned to your stack)
+                                  │   each emits a report + proposed diff, never applies
+                                  ▼
+                            Synthesizer    consolidate parallel perspectives  *
+                                  │
+                                  ▼
+                            Critic         two verdicts: spec compliance + quality
+                                  │
+                                  ▼
+                            close-verifier regenerate API baseline  (T2 / T3 only)
+                                  │
+                                  ▼
+                            Executor       apply the audited diff, and only that
+                                  │
+                                  ▼
+                     back to the Orchestrator, which writes one session
+                     summary per batch and returns a short JSON receipt **
 
         * Synthesizer runs for parallel work only. Because the chain always
           ends review-then-apply, the artifact applied is always the one audited.
+       ** Orchestrated runs only. The receipt is all that crosses back into your
+          main session, which is why a long plan can run for hours without the
+          session filling up and compacting. Single tasks and short plans skip
+          the Orchestrator entirely and return straight to you.
 ```
+
+**This is the shape Phanes is built for.** The setup pays off most when you write a plan first, broken into numbered steps and grouped into phases, and then let the run work through it. Give each step a clear boundary and each phase a clear exit condition, hand the plan to Phanes, and the Orchestrator will size its own batches, route every step to the right tier, and keep the review chain intact from the first step to the last. A vague single sentence still works, it simply gives the machinery much less to hold onto.
 
 **7. Bootstrap session summary.** Phanes writes `documentation/session-summaries/SS00001_phanes-bootstrap_<date>.md`, which records the install, the confirmed module list, the agent roster, and any TODOs that were deferred.
 
@@ -112,9 +139,10 @@ When you run `/phanes` again, it detects the existing install through the `.clau
 
 ### First run
 
-Type `/phanes` in your project. It scans the repository and builds the whole agentic team and documentation structure around it. Two things make the first run land well.
+Type `/phanes` in your project. It scans the repository and builds the whole agentic team and documentation structure around it. Three things make the first run land well.
 
-- **Give it something to read.** On an empty or brand-new repository, create at least a `plan.md` that describes what you want to build. Phanes reads it to understand the project's purpose and shapes the entire setup, including the agents, the workflows, and the module layout, around the project you actually intend to build rather than around an empty folder.
+- **Start the session at high reasoning effort.** Reasoning effort is set once, when the session launches, and it governs the primary session and every sub-agent it spawns in that session. Launch with `claude --effort high` (or export `CLAUDE_CODE_EFFORT_LEVEL=high` before starting), and use `xhigh` for design-heavy runs where you expect a lot of architecture work. **`high` is the recommended default for Phanes**, because the run spends most of its time on routing and structural judgment, where a cheap reasoning pass costs far more in rework than it saves. Set it at launch rather than mid-run: changing effort mid-session writes to your global settings and leaks into other projects and parallel sessions.
+- **Give it something to read, ideally a plan.** On an empty or brand-new repository, create at least a `plan.md` that describes what you want to build. Phanes reads it to understand the project's purpose and shapes the entire setup, including the agents, the workflows, and the module layout, around the project you actually intend to build rather than around an empty folder. **Best results come from a plan written as numbered steps grouped into phases**, each step with a clear boundary and each phase with a clear exit condition. That is the shape the run is designed to consume, and it is what lets the Orchestrator batch the work cleanly once execution starts (see the [diagram above](#what-it-does)).
 - **Steer it if you like.** Anything you type right after the command is treated as a directive and takes priority over the defaults, so you can inject your own needs into the setup. For example: `/phanes focus on the api/ module; skip pre-commit hook install`.
 
 When the run finishes, restart your Claude Code session so the enforcement hooks arm. Phanes reminds you to.
@@ -124,7 +152,7 @@ When the run finishes, restart your Claude Code session so the enforcement hooks
 Think of `/phanes` as refreshing Claude's knowledge of your project. Every run surveys the codebase again and brings the agent team, the workflows, and the registries back in line with reality.
 
 - **Early, small project: run it freely.** Several times a day is fine. While the codebase is small a run costs little in tokens and context, and keeping the agent team current pays off constantly.
-- **Before an implementation plan.** This is a good habit rather than a hard rule. Write your plan, say for a new module, then run `/phanes` and inject it. Injecting simply means pasting the plan's contents, or its path, right after the command. Phanes updates the agents and workflows, and creates new ones where needed, so the team is tuned to execute exactly that plan when you start.
+- **Before an implementation plan.** This is a good habit rather than a hard rule, and it is the highest-value run of them all. Write your plan first, say for a new module, as numbered steps grouped into phases, then run `/phanes` and inject it. Injecting simply means pasting the plan's contents, or its path, right after the command. Phanes updates the agents and workflows, and creates new ones where needed, so the team is tuned to execute exactly that plan when you start. Then hand the same plan to the run that executes it and let it work through the steps in order.
 - **Session bookends.** Running it at the end of a workday, or first thing when you sit down, keeps the project context fresh before real work begins.
 - **Grown project: throttle down.** Once the codebase is large, once or twice a day is plenty. Add a run right before a large plan. Smaller ones usually do not need one.
 
@@ -327,9 +355,9 @@ Phanes never installs these. The capability census discovers them only if you in
 
 ## Version
 
-Current: **v3.2** (2026-07-21). Two operating-discipline fixes and one architecture addition. A top-anchored, delete-protected **Pinned Directives block** becomes the first content of every project's root `CLAUDE.md`, so the always-loaded surface now carries the binding rules that used to live only in the prompt (the per-agent effort trigger among them). A **procedure-precedence rule** plus a supersession-annotation pass stop stale session-summary narrative from overriding the current spec. And an ephemeral **Orchestrator** executes long plan runs in self-sized batches of a few steps each, so the primary session stays slim enough to run across many phases without compacting; short runs and explicitly narrowed ones behave exactly as before.
+Current: **v3.2.1** (2026-07-26). A small alignment release for the new **Claude Opus 5** model. The Model & Effort rubric now names Opus 5 in place of Opus 4.8 at every Opus-tier assignment; the use cases behind those assignments are unchanged, so no installed project needs to be rebuilt. The README also gained a session-effort recommendation, and its workflow diagram now shows where the Orchestrator picks up a multi-step plan.
 
-Beneath it: v3.1 gave Phanes its real upgrade path, routing version jumps to `/phanesupgrade` (plan from the changelog, exact file operations from an installed-artifact manifest, on a branch you merge yourself) and prefixing agents with the project slug; v3.0.1 corrected the reasoning-effort rubric and added the CLI-spawn bridge for per-agent effort; v3.0 added the capability consent layer, the `close-verifier` rename, and the cross-shell `cli.js` launcher. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
+Beneath it: v3.2 added the top-anchored, delete-protected **Pinned Directives block** as the first content of every project's root `CLAUDE.md`, a **procedure-precedence rule** with a supersession-annotation pass, and the ephemeral **Orchestrator** that executes long plan runs in self-sized batches so the primary session stays slim enough to run across many phases without compacting; v3.1 gave Phanes its real upgrade path, routing version jumps to `/phanesupgrade` (plan from the changelog, exact file operations from an installed-artifact manifest, on a branch you merge yourself) and prefixing agents with the project slug; v3.0.1 corrected the reasoning-effort rubric and added the CLI-spawn bridge for per-agent effort; v3.0 added the capability consent layer, the `close-verifier` rename, and the cross-shell `cli.js` launcher. The full release history is in [`Changelog.md`](Changelog.md), and every superseded version is archived verbatim in [`older version/`](older%20version/).
 
 ---
 

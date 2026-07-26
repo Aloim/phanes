@@ -6,6 +6,24 @@ All notable changes to **Phanes**. The authoritative version marker is the stamp
 
 ---
 
+## v3.2.1 (2026-07-26)
+
+Patch release. A naming alignment with the newly released **Claude Opus 5**, plus two README clarifications. No behavioural change: every Opus-tier assignment keeps exactly the use case it had, only the model generation it names has moved forward.
+
+### Changed
+- **Model & Effort rubric re-reviewed 2026-07-26 against Haiku 4.5 / Sonnet 5 / Opus 5.** All three Opus-tier rows now read `opus` (Opus 5) instead of `opus` (Opus 4.8): all Critics at `high` (`xhigh` for security-critical or money-critical review), the Orchestrator role at `high`, and architect/designer, Synthesizer/Arbiter, high-ambiguity planning and security or monetary design at `xhigh`. Assignments, effort levels, the tier-first-effort-second priority, and the small-model-at-max-effort anti-pattern are all unchanged. The line 1 stamp and the rubric review banner carry the new review date.
+- **README "How to use" now recommends the session reasoning effort.** A new first-run bullet states that effort is set once at session launch and governs the primary session and every sub-agent it spawns, gives `claude --effort high` and `CLAUDE_CODE_EFFORT_LEVEL=high` as the two ways to set it, names `high` as the recommended Phanes default with `xhigh` for design-heavy runs, and warns against changing it mid-run because that writes to global settings.
+- **README workflow diagram now shows the Orchestrator branch.** The chain diagram opens with a split between a single task (or a plan of 4 or fewer steps), which is triaged directly, and a multi-step plan of 5 or more steps, which goes to the ephemeral Orchestrator that batches 1 to 3 consecutive steps and never crosses a phase boundary. The diagram closes with the batch session summary and JSON receipt returning to the main session, which is why long plans do not compact it.
+- **README states the plan-first working shape.** New guidance in three places (under the diagram, in the first-run bullets, and in the re-run cadence) that the setup performs best when a multi-step, phase-grouped plan is written first and the run is then allowed to work through it, each step with a clear boundary and each phase with a clear exit condition.
+- **Template library re-stamped to v3.2.1** so the version-pinned fetch path, the manifest version, and the per-file sanity stamp stay in lockstep with the prompt. Script contents are otherwise byte-identical to v3.2. Also corrects a stale `"version": "3.1"` in the checklist's `templates` block example, which had lagged two releases behind.
+
+**Installed project impact:**
+- Affected: `.claude/agents/*` (Opus-tier agents pick up the new model naming on the next `/phanes` regeneration), `.phanes/scripts/*` (re-stamped on the next run), `.phanes/config.json` (`phanesVersion`, `templates.version`)
+- Breaking: no (naming only; an installed v3.2 project keeps working unchanged and can upgrade at its own pace)
+- Verify: line 1 of your installed `phanes.md` reads `Phanes v3.2.1`; the Model & Effort rubric names Opus 5; `.phanes/config.json` contains `"phanesVersion": "3.2.1"`
+
+---
+
 ## v3.2 (2026-07-21)
 
 Minor version. Two operating-discipline fixes from live v3.1 operation and one architecture addition: binding rules now ride the always-loaded surface, stale session-summary precedent is neutralized, and long plan runs execute through an ephemeral Orchestrator so the primary session stays slim enough to never compact.
