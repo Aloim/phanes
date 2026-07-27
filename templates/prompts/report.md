@@ -1,5 +1,5 @@
 <!-- DOC | The blank report template every sub-agent copies for its report; role-conditional instruction blocks for Critic archetypes, close-verifier, and the designated visual verifier ride inside as comments. -->
-<!-- phanes-template v3.3 report -->
+<!-- phanes-template v3.3.1 report -->
 # Report: [Brief Title of Your Task]
 
 ## Assignment Details (Injected Context)

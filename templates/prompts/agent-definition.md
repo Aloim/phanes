@@ -1,5 +1,5 @@
 <!-- DOC | The sub-agent definition template Phanes instantiates once per roster agent in Phase 4; these two provenance header lines are never copied into generated agents. -->
-<!-- phanes-template v3.3 agent-definition -->
+<!-- phanes-template v3.3.1 agent-definition -->
 ---
 name: <projectSlug>-<role>   # MUST equal the filename stem, e.g. blueprompt-executor
 description: "Provides [concise capability/purpose]. MUST BE USED for [hard-trigger topics or cues]. Use PROACTIVELY when you hear [trigger keywords / scenario examples]. ≤50 words total."
