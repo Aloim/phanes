@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.3.1 loc-check
+# phanes-template v3.4.0 loc-check
 # Scans tracked source files and prints any over the 500 LOC soft ceiling with line counts.
 # With file arguments, checks only those files (this is how hook-size-check invokes it).
 # Advisory: always exits 0.
@@ -22,6 +22,10 @@ cfg_str() { # cfg_str KEY FILE
 
 root=$(find_root) || { echo "loc-check: .phanes/config.json not found from this directory" >&2; exit 0; }
 docRoot=$(cfg_str docRoot "$root/.phanes/config.json"); [ -z "$docRoot" ] && docRoot=documentation
+# A trailing slash in docRoot would otherwise leak into every derived path and message
+# (an empty basename, doubled separators, and absolute paths where relative ones belong).
+while [ "${docRoot%/}" != "$docRoot" ]; do docRoot=${docRoot%/}; done
+[ -z "$docRoot" ] && docRoot=documentation
 
 # Build the file list.
 list=$(mktemp)
@@ -49,7 +53,7 @@ while IFS= read -r f; do
   case "$f" in
     *.png|*.jpg|*.jpeg|*.gif|*.ico|*.pdf|*.zip|*.exe|*.dll|*.bin|*.woff|*.woff2|*.ttf) continue ;;
   esac
-  lines=$(wc -l < "$f" 2>/dev/null | tr -d ' ')
+  lines=$(awk 'END{print NR}' "$f" 2>/dev/null | tr -d ' ')
   [ -z "$lines" ] && continue
   if [ "$lines" -gt "$SOFT_CEILING" ]; then
     rel=${f#"$root"/}

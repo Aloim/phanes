@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.3.1 doc-check
+# phanes-template v3.4.0 doc-check
 # Scans the documentation tree (archive/ excluded) for living documents over the 500-line ceiling
 # or missing a DOC header line, for folders holding docs but no _index.md, and for indexes older
 # than their newest sibling. Prints offenders with line counts. Frozen artifact classes (session
@@ -22,10 +22,47 @@ cfg_str() {
     | sed 's/.*:[[:space:]]*"\(.*\)"$/\1/'
 }
 
+cfg_arr() { # cfg_arr KEY FILE -> newline-separated values
+  tr '\n' ' ' < "$2" 2>/dev/null \
+    | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\[\([^]]*\)\].*/\1/p" \
+    | grep -o '"[^"]*"' | sed 's/"//g'
+}
+
+norm_entries() { # norm_entries DOCROOT  (reads raw entries on stdin)
+  while IFS= read -r e; do
+    [ -n "$e" ] || continue
+    e=$(printf '%s' "$e" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    [ -n "$e" ] || continue
+    e=$(printf '%s' "$e" | tr '\\' '/' | sed 's#^/*##; s#/*$##')
+    case "$e" in
+      "$1"/*) e=${e#"$1"/} ;;
+    esac
+    [ -n "$e" ] && printf '%s\n' "$e"
+  done
+}
+
+is_listed() { # is_listed REL LIST
+  _rel=$1
+  printf '%s\n' "$2" | while IFS= read -r e; do
+    [ -n "$e" ] || continue
+    case "$e" in
+      */*) case "$_rel" in "$e"|"$e"/*) echo hit ;; esac ;;
+      *)   case "/$_rel/" in *"/$e/"*) echo hit ;; esac ;;
+    esac
+  done | grep -q hit
+}
+
 root=$(find_root) || { echo "doc-check: .phanes/config.json not found from this directory" >&2; exit 0; }
 docRoot=$(cfg_str docRoot "$root/.phanes/config.json"); [ -z "$docRoot" ] && docRoot=documentation
+# A trailing slash in docRoot would otherwise leak into every derived path and message
+# (an empty basename, doubled separators, and absolute paths where relative ones belong).
+while [ "${docRoot%/}" != "$docRoot" ]; do docRoot=${docRoot%/}; done
+[ -z "$docRoot" ] && docRoot=documentation
 docPath="$root/$docRoot"
 [ -d "$docPath" ] || { echo "doc-check: no documentation tree"; exit 0; }
+
+frozenlist=$(cfg_arr frozen_classes "$root/.phanes/config.json" | norm_entries "$docRoot")
+exclusions=$(cfg_arr index_exclusions "$root/.phanes/config.json" | norm_entries "$docRoot")
 
 is_frozen() { # is_frozen REL
   rel=$1
@@ -35,6 +72,11 @@ is_frozen() { # is_frozen REL
   esac
   # dated snapshot folder segment (YYYY-MM-DD...)
   printf '%s' "$rel" | grep -qE '(^|/)[0-9]{4}-[0-9]{2}-[0-9]{2}' && return 0
+  if [ -n "$frozenlist" ]; then
+    dir=$(dirname "$rel")
+    [ "$dir" = "." ] && dir=""
+    if [ -n "$dir" ] && is_listed "$dir" "$frozenlist"; then return 0; fi
+  fi
   return 1
 }
 
@@ -50,7 +92,7 @@ find "$docPath" -type f -name '*.md' ! -path '*/archive/*' | while IFS= read -r 
   rel=${f#"$docPath"/}
   is_frozen "$rel" && continue
 
-  lines=$(wc -l < "$f" 2>/dev/null | tr -d ' ')
+  lines=$(awk 'END{print NR}' "$f" 2>/dev/null | tr -d ' ')
   if [ -n "$lines" ] && [ "$lines" -gt "$CEILING" ]; then
     echo "OVER-CEILING: $rel ($lines lines)"; bump
   fi
@@ -65,6 +107,9 @@ find "$docPath" -type d ! -path '*/archive' ! -path '*/archive/*' | while IFS= r
   has=$(ls "$folder" 2>/dev/null | grep -E '\.md$' | grep -vE '^_index\.md$|^_index_archive\.md$' | grep -c .)
   [ "$has" -eq 0 ] && continue
   rel=${folder#"$root"/}
+  drel=${folder#"$docPath"}
+  drel=$(printf '%s' "$drel" | sed 's#^/*##')
+  if [ -n "$exclusions" ] && [ -n "$drel" ] && is_listed "$drel" "$exclusions"; then continue; fi
   if [ ! -f "$folder/_index.md" ]; then
     echo "NO-INDEX: $rel/"; bump
     continue

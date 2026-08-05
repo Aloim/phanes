@@ -1,4 +1,4 @@
-# phanes-template v3.3.1 loc-check
+# phanes-template v3.4.0 loc-check
 # Scans tracked source files and prints any over the 500 LOC soft ceiling with line counts.
 # With file arguments, checks only those files (this is how hook-size-check invokes it).
 # Advisory: always exits 0.
@@ -18,9 +18,18 @@ function Find-PhanesRoot {
 $root = Find-PhanesRoot
 if (-not $root) { [Console]::Error.WriteLine('loc-check: .phanes/config.json not found from this directory'); exit 0 }
 
-$cfg = Get-Content -LiteralPath (Join-Path $root '.phanes\config.json') -Raw -Encoding utf8 | ConvertFrom-Json
+$cfg = $null
+try {
+  $cfg = Get-Content -LiteralPath (Join-Path $root '.phanes\config.json') -Raw -Encoding utf8 | ConvertFrom-Json
+} catch {
+  [Console]::Error.WriteLine('loc-check: .phanes/config.json is malformed, using defaults')
+  $cfg = $null
+}
 $docRoot = 'documentation'
 if ($cfg.docRoot) { $docRoot = $cfg.docRoot }
+# A trailing slash in docRoot would otherwise leak into every derived path and message.
+$docRoot = ([string]$docRoot).TrimEnd('/', '\')
+if (-not $docRoot) { $docRoot = 'documentation' }
 
 function Normalize([string]$p) { return ($p -replace '\\', '/') }
 
@@ -36,6 +45,9 @@ if ($args.Count -gt 0) {
   Push-Location $root
   try {
     $tracked = & git ls-files 2>$null
+  } catch {
+    $tracked = $null
+    [Console]::Error.WriteLine('loc-check: not a git repository, nothing to scan')
   } finally {
     Pop-Location
   }
@@ -61,7 +73,7 @@ foreach ($f in $files) {
   $ext = [System.IO.Path]::GetExtension($fn).ToLower()
   if ($ext -in @('.png', '.jpg', '.jpeg', '.gif', '.ico', '.pdf', '.zip', '.exe', '.dll', '.bin', '.woff', '.woff2', '.ttf')) { continue }
   $lines = 0
-  try { $lines = (Get-Content -LiteralPath $f | Measure-Object -Line).Lines } catch { continue }
+  try { $lines = @(Get-Content -LiteralPath $f -Encoding utf8).Count } catch { continue }
   if ($lines -gt $SOFT_CEILING) {
     $relOut = $fn
     if ($fn.StartsWith($rootNorm)) { $relOut = $fn.Substring($rootNorm.Length).TrimStart('/') }

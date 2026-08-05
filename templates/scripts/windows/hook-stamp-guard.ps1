@@ -1,7 +1,9 @@
-# phanes-template v3.3.1 hook-stamp-guard
+# phanes-template v3.4.0 hook-stamp-guard
 # PreToolUse(Write) guard. Reads the tool-call JSON from stdin. Denies (exit 2) creation of a NEW
 # file under a stamped tree whose content lacks the required header stamp, so new files must go
-# through `phanes new-file`. Every other call passes (exit 0). Fails open on any parse trouble.
+# through `phanes new-file`. Every other call passes (exit 0). Fails open on tool-call JSON or IO
+# trouble; a malformed .phanes/config.json instead falls back to the default stamped-tree list and
+# says so on stderr, so the guard stays live and audible rather than silently switching off.
 $ErrorActionPreference = 'Stop'
 
 function Find-PhanesRoot {
@@ -42,11 +44,20 @@ try {
   if (-not $fpNorm.StartsWith($rootNorm, [System.StringComparison]::OrdinalIgnoreCase)) { exit 0 }
   $rel = $fpNorm.Substring($rootNorm.Length).TrimStart('/')
 
-  $cfg = Get-Content -LiteralPath (Join-Path $root '.phanes\config.json') -Raw -Encoding utf8 | ConvertFrom-Json
   $stamped = @('src', 'tests', 'documentation')
-  if ($cfg.stampedTrees) { $stamped = $cfg.stampedTrees }
-  if ($cfg.docRoot) { $stamped += $cfg.docRoot }
-  if ($cfg.modules) { $stamped += $cfg.modules }
+  try {
+    $cfg = Get-Content -LiteralPath (Join-Path $root '.phanes\config.json') -Raw -Encoding utf8 | ConvertFrom-Json
+    if ($cfg.stampedTrees) { $stamped = $cfg.stampedTrees }
+    if ($cfg.docRoot) { $stamped += ([string]$cfg.docRoot).TrimEnd('/', '\') }
+    if ($cfg.modules) { $stamped += $cfg.modules }
+  } catch {
+    # This is the PreToolUse gate that makes `phanes new-file` mandatory; a malformed config must
+    # not silently switch it off. Fall back to the default stamped-tree list and say so on stderr,
+    # so the failure is visible rather than a quiet no-op. Caught here, inside the guard's own
+    # logic, so the outer catch's fail-open exit 0 below never swallows this specific case; the
+    # guard still runs, against the default list, and stays live and audible on both platforms.
+    [Console]::Error.WriteLine('hook-stamp-guard: .phanes/config.json is malformed, using default stamped trees (src, tests, documentation)')
+  }
 
   $guarded = $false
   foreach ($t in $stamped) {

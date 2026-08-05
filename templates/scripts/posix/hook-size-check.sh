@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.3.1 hook-size-check
+# phanes-template v3.4.0 hook-size-check
 # PostToolUse(Write|Edit) advisory. Reads the tool-call JSON from stdin and routes the touched file
 # to the matching audit: a hot file (root CLAUDE.md or CLAUDE.local.md) runs register-check; a
 # documentation file runs doc-index then doc-check; anything else runs loc-check on that file.
@@ -34,6 +34,10 @@ fp=$(printf '%s' "$raw" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' 
 start=$(dirname "$fp")
 root=$(find_root_from "$start") || root=$(find_root_from "$(pwd)") || exit 0
 docRoot=$(cfg_str docRoot "$root/.phanes/config.json"); [ -z "$docRoot" ] && docRoot=documentation
+# A trailing slash in docRoot would otherwise leak into every derived path and message
+# (an empty basename, doubled separators, and absolute paths where relative ones belong).
+while [ "${docRoot%/}" != "$docRoot" ]; do docRoot=${docRoot%/}; done
+[ -z "$docRoot" ] && docRoot=documentation
 
 case "$fp" in
   "$root"/*) rel=${fp#"$root"/} ;;

@@ -1,4 +1,4 @@
-# phanes-template v3.3.1 doc-index
+# phanes-template v3.4.0 doc-index
 # Regenerates every _index.md under the documentation tree (archive/ excluded). SOLE WRITER of
 # indexes; hand-editing them is forbidden. Each entry is extracted in fallback order: DOC header
 # line, then first heading, then humanized filename, so files predating the discipline are indexed
@@ -6,6 +6,10 @@
 # older entries collapse into a range line pointing to a frozen _index_archive.md. Always exits 0.
 $ErrorActionPreference = 'Stop'
 $INLINE = 100
+$UTF8_NO_BOM = New-Object System.Text.UTF8Encoding($false)
+function Write-Utf8([string]$path, [string]$content) {
+  [System.IO.File]::WriteAllText($path, $content, $UTF8_NO_BOM)
+}
 
 function Find-PhanesRoot {
   $d = (Get-Location).Path
@@ -20,15 +24,59 @@ function Find-PhanesRoot {
 $root = Find-PhanesRoot
 if (-not $root) { [Console]::Error.WriteLine('doc-index: .phanes/config.json not found from this directory'); exit 0 }
 
-$cfg = Get-Content -LiteralPath (Join-Path $root '.phanes\config.json') -Raw -Encoding utf8 | ConvertFrom-Json
+$cfg = $null
+try {
+  $cfg = Get-Content -LiteralPath (Join-Path $root '.phanes\config.json') -Raw -Encoding utf8 | ConvertFrom-Json
+} catch {
+  [Console]::Error.WriteLine('doc-index: .phanes/config.json is malformed, using defaults')
+  $cfg = $null
+}
 $docRoot = 'documentation'
 if ($cfg.docRoot) { $docRoot = $cfg.docRoot }
+# A trailing slash in docRoot would otherwise leak into every derived path and message
+# (doubled separators, and an empty final segment where a folder name belongs).
+$docRoot = ([string]$docRoot).TrimEnd('/', '\')
+if (-not $docRoot) { $docRoot = 'documentation' }
 $docPath = Join-Path $root $docRoot
 if (-not (Test-Path -LiteralPath $docPath)) { Write-Output 'doc-index: no documentation tree'; exit 0 }
+$docPath = (Resolve-Path -LiteralPath $docPath).Path
+
+function Get-DisciplineList([object]$cfg, [string]$key, [string]$docRoot) {
+  $out = New-Object System.Collections.Generic.List[string]
+  if (-not $cfg.doc_discipline) { return $out }
+  $raw = $cfg.doc_discipline.$key
+  if (-not $raw) { return $out }
+  $prefix = $docRoot.Trim('/').Trim('\') + '/'
+  foreach ($e in @($raw)) {
+    if (-not $e) { continue }
+    $n = ([string]$e).Trim()
+    if (-not $n) { continue }
+    $n = $n -replace '\\', '/'
+    $n = $n.Trim('/')
+    if ($n.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+      $n = $n.Substring($prefix.Length).Trim('/')
+    }
+    if ($n) { $out.Add($n) }
+  }
+  return $out
+}
+
+$exclusions = Get-DisciplineList $cfg 'index_exclusions' $docRoot
+function Test-Excluded([string]$folder) {
+  $rel = $folder.Substring($docPath.Length).Trim('\').Trim('/') -replace '\\', '/'
+  foreach ($e in $exclusions) {
+    if ($e -notmatch '/') {
+      foreach ($seg in ($rel -split '/')) { if ($seg -eq $e) { return $true } }
+    } else {
+      if ($rel -eq $e -or $rel.StartsWith($e + '/', [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+  }
+  return $false
+}
 
 function Get-DocLine([string]$file) {
   $desc = $null
-  try { $head = Get-Content -LiteralPath $file -TotalCount 8 } catch { $head = @() }
+  try { $head = Get-Content -LiteralPath $file -TotalCount 8 -Encoding utf8 } catch { $head = @() }
   foreach ($ln in $head) {
     $m = [regex]::Match($ln, '<!--\s*DOC\s*\|\s*(.+?)\s*-->')
     if ($m.Success) { return $m.Groups[1].Value.Trim() }
@@ -46,6 +94,7 @@ $written = 0
 function Build-Index([string]$folder) {
   $name = Split-Path -Leaf $folder
   if ($name -eq 'archive') { return }
+  if (Test-Excluded $folder) { return }
 
   $children = Get-ChildItem -LiteralPath $folder -Force -ErrorAction SilentlyContinue
   $subfolders = @($children | Where-Object { $_.PSIsContainer -and $_.Name -ne 'archive' })
@@ -60,6 +109,10 @@ function Build-Index([string]$folder) {
   $lines.Add("")
 
   foreach ($sf in ($subfolders | Sort-Object Name)) {
+    # An excluded subtree never gets an _index.md (the Test-Excluded guard above skips its
+    # own Build-Index call entirely), so linking to one here would point at a file that can
+    # never exist. Apply the same test the generation path uses.
+    if (Test-Excluded $sf.FullName) { continue }
     $lines.Add("- $($sf.Name)/ : subfolder (see $($sf.Name)/_index.md)")
   }
 
@@ -69,9 +122,9 @@ function Build-Index([string]$folder) {
       $lines.Add("- $($f.Name) : $(Get-DocLine $f.FullName)")
     }
   } else {
-    $inline = $entries[0..($INLINE - 1)]
+    $newestSlice = $entries[0..($INLINE - 1)]
     $older = $entries[$INLINE..($entries.Count - 1)]
-    foreach ($f in $inline) {
+    foreach ($f in $newestSlice) {
       $lines.Add("- $($f.Name) : $(Get-DocLine $f.FullName)")
     }
     $lines.Add("- ... $($older.Count) older entries collapsed into _index_archive.md")
@@ -82,10 +135,16 @@ function Build-Index([string]$folder) {
     foreach ($f in $older) {
       $arch.Add("- $($f.Name) : $(Get-DocLine $f.FullName)")
     }
-    Set-Content -LiteralPath (Join-Path $folder '_index_archive.md') -Value ($arch -join "`n") -Encoding utf8
+    # Advisory: a read-only or locked index must not abort the walk under EAP = 'Stop'.
+    try { Write-Utf8 (Join-Path $folder '_index_archive.md') (($arch -join "`n") + "`n") }
+    catch { [Console]::Error.WriteLine("doc-index: cannot write _index_archive.md in $folder, skipping") }
   }
 
-  Set-Content -LiteralPath (Join-Path $folder '_index.md') -Value ($lines -join "`n") -Encoding utf8
+  try { Write-Utf8 (Join-Path $folder '_index.md') (($lines -join "`n") + "`n") }
+  catch {
+    [Console]::Error.WriteLine("doc-index: cannot write _index.md in $folder, skipping")
+    return
+  }
   $script:written++
 }
 

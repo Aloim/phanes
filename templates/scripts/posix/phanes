@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.3.1 phanes
+# phanes-template v3.4.0 phanes
 # Dispatcher. Routes `phanes <subcommand> [args]` to the sibling script in this directory.
 # Resolves siblings by this script's own location, so it works from any working directory.
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -11,6 +11,16 @@ fi
 
 sub=$1
 shift
+
+# repo-manifest, batch-apply, and the v3.4 bootstrap set ship Windows-only in v3.4; the
+# POSIX port is deferred. Refusing here by name keeps a deferred command from
+# masquerading as a typo.
+case "$sub" in
+  repo-manifest|batch-apply|preflight|install-templates|scaffold|ledger|hook-ledger-status|manifest-write|census-diff|update-preflight)
+    echo "phanes: '$sub' is not available on this platform yet (Windows only in v3.4); the POSIX port is planned" >&2
+    exit 1
+    ;;
+esac
 
 if [ -f "$here/$sub.sh" ]; then
   exec sh "$here/$sub.sh" "$@"

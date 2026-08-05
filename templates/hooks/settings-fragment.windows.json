@@ -11,6 +11,11 @@
         "matcher": "Write|Edit",
         "hooks": [{ "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .phanes/scripts/hook-size-check.ps1" }]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [{ "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .phanes/scripts/hook-ledger-status.ps1" }]
+      }
     ]
   }
 }
