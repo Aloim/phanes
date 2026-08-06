@@ -1,5 +1,5 @@
 #!/bin/sh
-# phanes-template v3.3.1 hook-stamp-guard
+# phanes-template v3.4.0 hook-stamp-guard
 # PreToolUse(Write) guard. Reads the tool-call JSON from stdin. Denies (exit 2) creation of a NEW
 # file under a stamped tree whose content lacks the required header stamp, so new files must go
 # through `phanes new-file`. Every other call passes (exit 0). Fails open on any parse trouble.
@@ -48,7 +48,9 @@ esac
 
 cfgfile="$root/.phanes/config.json"
 stamped="src tests documentation"
-docRoot=$(cfg_str docRoot "$cfgfile"); [ -n "$docRoot" ] && stamped="$stamped $docRoot"
+docRoot=$(cfg_str docRoot "$cfgfile")
+while [ "${docRoot%/}" != "$docRoot" ]; do docRoot=${docRoot%/}; done
+[ -n "$docRoot" ] && stamped="$stamped $docRoot"
 mods=$(cfg_arr modules "$cfgfile"); [ -n "$mods" ] && stamped="$stamped $mods"
 trees=$(cfg_arr stampedTrees "$cfgfile"); [ -n "$trees" ] && stamped="$stamped $trees"
 

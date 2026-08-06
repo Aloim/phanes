@@ -1,11 +1,10 @@
 <!-- DOC | The sub-agent definition template Phanes instantiates once per roster agent in Phase 4; these two provenance header lines are never copied into generated agents. -->
-<!-- phanes-template v3.3.1 agent-definition -->
+<!-- phanes-template v3.4.0 agent-definition -->
 ---
 name: <projectSlug>-<role>   # MUST equal the filename stem, e.g. blueprompt-executor
 description: "Provides [concise capability/purpose]. MUST BE USED for [hard-trigger topics or cues]. Use PROACTIVELY when you hear [trigger keywords / scenario examples]. ≤50 words total."
 color: <color-choice>  # Essential for visual tracking in team operations
-model: sonnet | opus | haiku  # Must be defined using the Model & Effort Selection rubric
-effort_class: baseline | elevated  # Relative to the session effort dial, resolved by the orchestrator at dispatch (resolution table, rubric). OMIT for haiku (no dial). Shipped default is baseline for EVERY archetype; elevated is a user lever for pinning an archetype hot, nothing ships with it set. The orchestrator passes the RESOLVED absolute level as --effort on bridge spawns (temporary bridge, see rubric); when claude-code #43083 lands, the resolved level is what the Task tool consumes natively.
+model: sonnet | opus | haiku  # Must be defined using the Model & Effort Selection rubric. Default is sonnet for every roster agent; opus ONLY for the plan-authoring chain (the initial plan and the Critic pass that reviews it, through plan close) and the security-review specialization; haiku for scouts, retrieval, and mechanical transforms. No effort field: every non-haiku agent runs at the session's single level, high (v3.4).
 tools: tool1, tool2    # Least privilege. Write access only for report/artifact writers per single-writer assignments. Execution access to `.phanes/scripts/` where the agent invokes scripts. Serena where installed and useful. Agent-spawning tool for scout-eligible archetypes and the orchestrator role only (the orchestrator is the sole non-scout spawn grant, v3.2). May list exact MCP tool names (mcp__server__tool) or a server pattern (mcp__server__*) for fine-grained least privilege.
 mcpServers: server-a, server-b   # Optional per-agent MCP allowlist (v3.0). List ONLY servers the user SELECTED in the Phase 0 consent gate AND that Phase 3 matched to this agent. Omit entirely if none. Executor and Patch-Author never carry MCP servers.
 ---

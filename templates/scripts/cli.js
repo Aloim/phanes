@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// phanes-template v3.3.1 cli
+// phanes-template v3.4.0 cli
 // Cross-shell entry point: `node .phanes/scripts/cli.js <subcommand> [args]` resolves identically
 // in PowerShell, cmd, and Git Bash, so agents never depend on PATH or a shell-specific launcher.
 // It forwards to the platform dispatcher sibling (phanes.ps1 on Windows, the POSIX `phanes`
-// elsewhere), which owns all subcommand routing — one source of truth, no duplicated dispatch logic.
+// elsewhere), which owns all subcommand routing: one source of truth, no duplicated dispatch logic.
 'use strict';
 
 const { spawnSync } = require('child_process');

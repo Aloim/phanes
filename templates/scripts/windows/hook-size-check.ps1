@@ -1,4 +1,4 @@
-# phanes-template v3.3.1 hook-size-check
+# phanes-template v3.4.0 hook-size-check
 # PostToolUse(Write|Edit) advisory. Reads the tool-call JSON from stdin and routes the touched file
 # to the matching audit: a hot file (root CLAUDE.md or CLAUDE.local.md) runs register-check; a
 # documentation file runs doc-index then doc-check; anything else runs loc-check on that file.
@@ -35,6 +35,9 @@ try {
   $cfg = Get-Content -LiteralPath (Join-Path $root '.phanes\config.json') -Raw -Encoding utf8 | ConvertFrom-Json
   $docRoot = 'documentation'
   if ($cfg.docRoot) { $docRoot = $cfg.docRoot }
+  # A trailing slash in docRoot would otherwise leak into every derived path and message.
+  $docRoot = ([string]$docRoot).TrimEnd('/', '\')
+  if (-not $docRoot) { $docRoot = 'documentation' }
 
   $rootNorm = ((Resolve-Path -LiteralPath $root).Path -replace '\\', '/').TrimEnd('/')
   $fpNorm = ($fp -replace '\\', '/')

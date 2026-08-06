@@ -1,10 +1,10 @@
-# phanes-template v3.3.1 phanes
+# phanes-template v3.4.0 phanes
 # Dispatcher. Routes `phanes <subcommand> [args]` to the sibling script in this directory.
 # Resolves siblings by this script's own location, so it works from any working directory.
 $ErrorActionPreference = 'Stop'
 
 if ($args.Count -lt 1) {
-  Write-Output "phanes: subcommands: new-file loc-check doc-check register-check doc-index module-list list-apis regen-registry api-diff"
+  Write-Output "phanes: subcommands: new-file loc-check doc-check register-check doc-index module-list list-apis regen-registry api-diff repo-manifest batch-apply preflight install-templates scaffold ledger manifest-write census-diff update-preflight"
   exit 0
 }
 

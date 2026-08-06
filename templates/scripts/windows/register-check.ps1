@@ -1,4 +1,4 @@
-# phanes-template v3.3.1 register-check
+# phanes-template v3.4.0 register-check
 # Measures the two hot files (root CLAUDE.md and CLAUDE.local.md) in characters and prints a
 # status line each: OK (below 35000), SOFT-BREACH (35000 to 40000), CROP-REQUIRED (above 40000).
 # Also lists every completed register entry (## checkmark heading) still present, reports the
@@ -27,6 +27,16 @@ if (-not $root) { [Console]::Error.WriteLine('register-check: .phanes/config.jso
 $MARK_DONE = [regex]::Escape([string][char]0x2705)
 $MARK_BLOCK = [regex]::Escape([System.Char]::ConvertFromUtf32(0x1F6D1))
 
+# Count Unicode code points, not UTF-16 code units, so one astral character (an emoji) costs 1
+# against the ceiling, matching the POSIX count. .Length counts units and charges an emoji 2;
+# each high surrogate marks exactly one pair to subtract.
+function Get-CodePointCount([string]$s) {
+  if ([string]::IsNullOrEmpty($s)) { return 0 }
+  $pairs = 0
+  foreach ($c in $s.ToCharArray()) { if ([char]::IsHighSurrogate($c)) { $pairs++ } }
+  return $s.Length - $pairs
+}
+
 function Status([int]$chars) {
   if ($chars -gt $CROP) { return 'CROP-REQUIRED' }
   if ($chars -ge $SOFT) { return 'SOFT-BREACH' }
@@ -39,12 +49,18 @@ foreach ($name in @('CLAUDE.md', 'CLAUDE.local.md')) {
     Write-Output ("{0}: absent" -f $name)
     continue
   }
-  $raw = Get-Content -LiteralPath $f -Raw -Encoding utf8
+  # Advisory: an unreadable hot file (denied ACL, a directory in its place) must not abort the run
+  # under $ErrorActionPreference = 'Stop'. Say so and skip, rather than reporting a false 0/OK.
+  try { $raw = Get-Content -LiteralPath $f -Raw -Encoding utf8 }
+  catch {
+    [Console]::Error.WriteLine("register-check: cannot read $name, skipping")
+    continue
+  }
   if ($null -eq $raw) { $raw = '' }
-  $chars = $raw.Length
+  $chars = Get-CodePointCount $raw
   Write-Output ("{0}: {1} chars [{2}]" -f $name, $chars, (Status $chars))
 
-  $lines = Get-Content -LiteralPath $f -Encoding utf8
+  try { $lines = Get-Content -LiteralPath $f -Encoding utf8 } catch { $lines = @() }
 
   # Completed entries still present: headings that begin with '## ' and carry the completed marker.
   foreach ($ln in $lines) {
@@ -54,27 +70,29 @@ foreach ($name in @('CLAUDE.md', 'CLAUDE.local.md')) {
   }
 
   # Standing-blocker section: from the first heading carrying the blocker marker to the next heading.
+  # Unit: code points plus 1 per line for the newline, matching the POSIX section unit.
   $blockerChars = 0
   $inBlock = $false
   foreach ($ln in $lines) {
     $isHeading = $ln -match '^\#{1,6}\s'
     $hasMarker = $ln -match $MARK_BLOCK
     if ($isHeading) {
-      if ($hasMarker) { $inBlock = $true; $blockerChars += $ln.Length + 1; continue }
+      if ($hasMarker) { $inBlock = $true; $blockerChars += (Get-CodePointCount $ln) + 1; continue }
       elseif ($inBlock) { $inBlock = $false }
     }
-    if ($inBlock) { $blockerChars += $ln.Length + 1 }
+    if ($inBlock) { $blockerChars += (Get-CodePointCount $ln) + 1 }
   }
   if ($blockerChars -gt 0) {
     Write-Output ("  standing-blockers section: {0} chars" -f $blockerChars)
   }
 
   # Pinned Directives block character count (v3.2): opening marker line to closing marker line, inclusive.
+  # Unit: code points plus 1 per line for the newline, matching the POSIX section unit.
   $pinChars = 0
   $inPin = $false
   foreach ($ln in $lines) {
     if ($ln -match '^<!-- PINNED DIRECTIVES') { $inPin = $true }
-    if ($inPin) { $pinChars += $ln.Length + 1 }
+    if ($inPin) { $pinChars += (Get-CodePointCount $ln) + 1 }
     if ($ln -match '^<!-- /PINNED DIRECTIVES -->') { $inPin = $false }
   }
   if ($pinChars -gt 0) {
