@@ -1,10 +1,14 @@
 # PhanesLight
 
-> ## ⚠️ v3.7.1 — The manual line returns, and two rules change
+> ## ⚠️ v3.7.1 — This repository is the MANUAL install again
 >
-> **This repository is now the home of the MANUAL PhanesLight.** The Claude Code plugin has moved to [`github.com/Aloim/phanesplugin`](https://github.com/Aloim/phanesplugin). If you install through `/plugin marketplace add`, go there; nothing on this page applies to you.
+> **The plugin release that landed here at v3.7.0 was a mistake, and it is reverted.** The plugin was built for the **Claude community marketplace** and was never meant to replace this repository's contents. Publishing it here retired the manual install path as a side effect, which was not the intent. It has been moved to its own home at [`github.com/Aloim/phanesplugin`](https://github.com/Aloim/phanesplugin), and **this repository is the manual, single-file PhanesLight, as it was through v3.6.1.**
 >
-> **The manual install path is maintained again.** It was retired at v3.6.2 in favour of the plugin. That retirement is reversed: `phaneslight.md` is published here, and there is no manual v3.7.0 because v3.7.0 shipped only as a plugin. An install still on the manual path upgrades v3.6.1 straight to v3.7.1.
+> **If you are on the manual install (you fetched `phaneslight.md` into `.claude/commands/`), nothing was ever taken away from you.** v3.6.2 announced that your path was closing. Disregard it. Fetch v3.7.1 and carry on; see [Upgrading an older install](#upgrading-an-older-install).
+>
+> **If you installed the plugin from this repository in the meantime**, the marketplace here no longer resolves. Either re-add it from `Aloim/phanesplugin`, or move to the manual install; both routes are written out under [Coming from the plugin](#coming-from-the-plugin).
+>
+> **There is no manual v3.7.0**, because v3.7.0 was the plugin. A manual install goes from v3.6.1 straight to v3.7.1.
 >
 > **Two rules changed in the lineup.** The haiku tier, `<slug>-mechanic`, no longer writes code of any kind, and escalates from LOW upward because it can no longer absorb even a trivial fix itself. And `<slug>-reviewer` now reviews your plan before the run starts, and may write plan files; the old flat claim that it "never writes" was always contradicted by its own job and is corrected to "never writes code".
 >
@@ -408,6 +412,53 @@ Then open the project and run `/phaneslightupgrade`. It refreshes your `/phanesl
 
 You normally get here from `/phaneslight` itself: whenever a newer version has shipped, the version check at the start of every run offers the upgrade and routes you here.
 
+### Upgrading from v3.6.1 specifically
+
+v3.6.1 is the last manual release before this one, so this is the common case. **There is no manual v3.7.0**; v3.7.0 was the plugin, so you go straight from v3.6.1 to v3.7.1 and skip nothing that applies to you. Three steps:
+
+1. **Refresh both command files** with the fetch commands above. `/phaneslightupgrade` refreshes `/phaneslight` for you as its Phase U0 Step 2, so fetching the upgrader alone is enough if you would rather not do it by hand.
+2. **Run `/phaneslightupgrade`** in the project, on Opus 5 at `high` effort, with a clean `git status`.
+3. **Restart your session**, then run `/phaneslight` once. Hook configuration is snapshotted at session start, so anything the upgrade registered is inert until you do.
+
+The jump is small and additive. Nothing in your project structure moves, `migrationBoundaries` is unchanged, and the work is confined to regenerating `<slug>-mechanic` and `<slug>-reviewer` for the two new rules, restating them in the root `CLAUDE.md` Pinned Directives block, and reinstalling the template library at its `v3.7.1` stamps. Your accumulated knowledge is untouched.
+
+### Coming from the plugin
+
+The plugin published at v3.7.0 was meant for the Claude community marketplace and should never have replaced this repository's contents. It now lives at [`Aloim/phanesplugin`](https://github.com/Aloim/phanesplugin). **A marketplace you added from `Aloim/phaneslight` no longer resolves**, because the plugin tree has been removed from here. Pick one of two routes.
+
+**Route A: stay on the plugin.** Nothing in this repository applies to you, and no command you type changes. The plugin and the marketplace both kept the name `phaneslight`, so only the source moved:
+
+```
+/plugin marketplace remove phaneslight
+/plugin marketplace add Aloim/phanesplugin
+/plugin install phaneslight@phaneslight
+```
+
+Then restart Claude Code and run `/phaneslight:upgrade`. Your entry points remain `/phaneslight:run` and `/phaneslight:upgrade`.
+
+**Route B: move back to the manual install.** Do this if you preferred the single-file prompt, or if you want your hooks recorded in your own `.claude/settings.json` rather than registered by a plugin.
+
+1. **Uninstall the plugin and drop the marketplace.**
+
+   ```
+   /plugin uninstall phaneslight@phaneslight
+   /plugin marketplace remove phaneslight
+   ```
+
+   The non-interactive equivalents are `claude plugin uninstall phaneslight@phaneslight -y` and `claude plugin marketplace remove phaneslight`. Confirm with `/plugin list` and `/plugin marketplace list`.
+
+2. **Install the manual command files** with the fetch commands under [How to install](#how-to-install) and [Upgrading an older install](#upgrading-an-older-install). You want both `phaneslight.md` and `PhanesLightUpgrade.md`.
+
+3. **Restart Claude Code.** Plugin-registered hooks are removed with the plugin, but hook configuration is read at session start, so do not judge the state of anything until you have restarted.
+
+4. **Run `/phaneslight`** in the project. This is the step that matters: the plugin removed PhanesLight's hook entries from your `.claude/settings.json` when it took over registration, so nothing is enforcing size and stamp discipline until a manual run puts them back. The run re-merges the settings fragment, reinstalls the script library into `.phaneslight/scripts/`, and regenerates the roster.
+
+5. **Restart once more**, because the hooks you just registered are themselves snapshotted at session start.
+
+**Your project state carries over untouched.** Both lines are at v3.7.1 and both use `.phaneslight/`, the same `phanesLightVersion` key, the same manifest and the same five agents, so neither route is a migration and neither triggers the version gate. Nothing you have accumulated is at risk in either direction.
+
+**One caveat worth knowing.** If you leave the plugin installed *and* install the manual command files, you end up with two live entry points at the same version, and Claude Code does not document which wins on a name collision. Do not run both. Finish whichever route you picked.
+
 ---
 
 ## Companion tools
@@ -433,9 +484,48 @@ PhanesLight never installs these. The census discovers them only if you installe
 
 ## Version
 
-**Current: v3.7.1** (2026-09-04) — the manual line returns to this repository, the plugin moves to `Aloim/phanesplugin`, and two lineup rules change: the haiku tier writes no code and escalates from LOW, and the reviewer reviews the launch plan and may write plan files. See [`Changelog.md`](Changelog.md).
+**Current: v3.7.1** (2026-09-04). Full accounting in [`Changelog.md`](Changelog.md).
 
-**Previous: v3.6.1** (2026-09-03) — renaming, repository migration, and a workflow update. See the [notice at the top](#️-v361--renaming-repository-migration-and-a-workflow-update) for the migration; the rest of the release fixes thirteen defects found in production use, across tooling, orchestration, bootstrap quality and cheap-tier calibration.
+### v3.7.1 release notes
+
+**1. This repository is the manual install, and the plugin has its own home.**
+
+v3.7.0 published the Claude Code plugin into this repository and, in doing so, replaced the manual prompt with a retirement notice. That was a mistake. The plugin was built for the **Claude community marketplace** and belonged in its own repository from the start; nothing about shipping it required closing the manual path. Both halves are corrected here:
+
+- **`Aloim/phaneslight` (this repository) is the manual, single-file PhanesLight.** `phaneslight.md`, `PhanesLightUpgrade.md` and the template library are published here, as they were through v3.6.1. The v3.6.2 retirement notice is withdrawn.
+- **`Aloim/phanesplugin` is the plugin.** Its marketplace, skills and hook registration live there. The plugin is still named `phaneslight`, so `/phaneslight:run` and `/phaneslight:upgrade` are unchanged for anyone already using it; only the marketplace source moved.
+
+The two are separate products with separate mechanics for version checking, script delivery and hook registration. Keeping both in one repository is what forced the false choice in the first place.
+
+**Consequence, stated plainly:** a marketplace added from `Aloim/phaneslight` no longer resolves, because the plugin tree is gone from here. See [Coming from the plugin](#coming-from-the-plugin) for both ways out.
+
+**2. The haiku tier never writes code.**
+
+`<slug>-mechanic` may no longer write code of any kind. Its dispatched scope is mechanical **non-code** work only: formatting, documentation indexing, archive condensation, and the fetch-and-digest retrieval it already carried. A task that turns out to need authored code comes back to its spawner unwritten, with a description of what the task needs. It is also no longer named as an agent that may create files under `tests/`, because a test file is code.
+
+**Its escalation threshold drops from MED to LOW**, and that follows from the write restriction rather than from any reassessment of severity. A mechanic that could write was able to fix a LOW in passing and move on. One that cannot has nowhere to put a LOW except upward, and a LOW it keeps to itself is a LOW nobody else will ever see. What travels is a report, not a work item: the spawner applies the ordinary ladder to what arrives, and a LOW from a mechanic still creates no work unless the spawner independently regrades it. INFO never travels, from any agent.
+
+The worker is untouched. It still writes code within its dispatched scope and still escalates at MED.
+
+*Why:* the model rubric had said `Never for authored logic` since v3.6.0, but the write-rights table still granted the mechanic edits within a dispatched scope. The restriction therefore depended on every dispatcher choosing correctly rather than on the lineup refusing. This closes the gap in the table rather than in the guidance.
+
+**3. The reviewer plans first, and writes plan files.**
+
+On a planned launch the orchestrator's **first** act, before the first execution step and before any worker or mechanic dispatch, is to spawn `<slug>-reviewer` against the plan it was handed. The reviewer returns a plan review naming what the repository contradicts, what is sequenced wrong, what acceptance checks are missing, and what work the plan implies without stating. On CRIT or HIGH the orchestrator stops and brings it to you. A run handed no plan skips this entirely.
+
+**The reviewer may write the plan file**, amending it in place or authoring a corrected one under `documentation/plans/`, and naming every file it wrote in its return. That is the only writing it does and it is documentation: it never touches code, and the orchestrator still applies every code change itself.
+
+**The old wording was misleading and is corrected.** Up to v3.6.1 the spec said flatly that the reviewer "never writes" while requiring it to author fix plans, and the generation checklist called any reviewer write grant a defect. The two could not both be honoured. The rule now says what it always meant: the reviewer never writes **code**. A reviewer generated as wholly read-only now fails the generation check just as one granted code writes does, because it cannot perform the duty the lineup assigns it.
+
+**This costs more, deliberately.** The Fable tier now fires once per planned launch, where it previously fired only on HIGH and CRIT. The trade is that a defect caught in the plan costs one review, while the same defect caught at close costs every step built on top of it.
+
+**4. Publication.**
+
+v3.7.1 ships to **both** `Aloim/phaneslight` and the legacy `Aloim/phanes`, exactly as v3.6.1 did, so an installation still polling the old URL sees the release once and is repointed by `/phaneslightupgrade`. Every template stamp, `MANIFEST.json` and the tag-pinned fetch path move to `v3.7.1` together.
+
+---
+
+**Previous: v3.6.1** (2026-09-03) — renaming, repository migration, and a workflow update. See the collapsed v3.6.1 notice at the top of this file for the migration; the rest of the release fixes thirteen defects found in production use, across tooling, orchestration, bootstrap quality and cheap-tier calibration.
 
 **Tooling:** `new-file` selects its header by *destination* rather than by a magic module name, so a Markdown file under `documentation/` gets the DOC discipline header whatever module was named, and says so rather than promoting silently. `doc-index` orders by filename instead of modification time, so the index can answer "which is the latest" and editing an old document stops reordering the whole file. `register-check` renames its completed-entry finding to `COMPLETED-NOT-ARCHIVED` and explains itself, resolving a contradiction where the register legend advertised a marker whose use the checker reported as a finding. `loc-check` always terminates with a count line, so a truncated tail carries the number. Closure's write surface is documented exhaustively, since "output is a flag, never a fix" is a claim about judgment, not about the file system.
 

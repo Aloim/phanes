@@ -8,7 +8,94 @@
 
 IMPORTANT: **YOU MUST** ensure $ARGUMENTS guide the processing of this workflow if provided.
 
+---
+
+## 0. Read this first if you are a human, not the run
+
+**This file is the manual upgrade prompt.** It belongs at `~/.claude/commands/phaneslightupgrade.md` (or `.claude/commands/` inside one project) and is invoked as `/phaneslightupgrade`. Everything from section I onward is addressed to the agent executing the upgrade, not to you. This section is the part addressed to you, and it is the only part you need.
+
+### Getting the command files in the first place
+
+**Linux / macOS:**
+
+```bash
+mkdir -p ~/.claude/commands
+curl -L https://raw.githubusercontent.com/Aloim/phaneslight/main/PhanesLightUpgrade.md \
+  -o ~/.claude/commands/phaneslightupgrade.md
+curl -L https://raw.githubusercontent.com/Aloim/phaneslight/main/phaneslight.md \
+  -o ~/.claude/commands/phaneslight.md
+```
+
+**Windows (PowerShell):**
+
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\commands" | Out-Null
+Invoke-WebRequest `
+  -Uri https://raw.githubusercontent.com/Aloim/phaneslight/main/PhanesLightUpgrade.md `
+  -OutFile "$env:USERPROFILE\.claude\commands\phaneslightupgrade.md"
+Invoke-WebRequest `
+  -Uri https://raw.githubusercontent.com/Aloim/phaneslight/main/phaneslight.md `
+  -OutFile "$env:USERPROFILE\.claude\commands\phaneslight.md"
+```
+
+Fetching the upgrader alone is enough: Phase U0 Step 2 below refreshes `/phaneslight` for you.
+
+### Upgrading a manual install from v3.6.1 to v3.7.1
+
+v3.6.1 is the last manual release before this one, so this is the common case.
+
+**There is no manual v3.7.0.** v3.7.0 was the plugin release, published to `Aloim/phaneslight` by mistake; it was built for the Claude community marketplace and has since moved to `Aloim/phanesplugin`. Its retirement notice, which told you this path was closing, is withdrawn. You go from **v3.6.1 straight to v3.7.1** and skip nothing that applies to you.
+
+1. **Fetch the command files** with the commands above.
+2. **Open the project**, make sure `git status` is clean, and run **`/phaneslightupgrade`**.
+3. **Run it on Opus 5 at `high` effort** (`claude --model opus --effort high`). See the note in section I: this is the worst run in the library to economize on.
+4. **Restart your Claude Code session**, then run `/phaneslight` once.
+
+The jump is small and additive. `migrationBoundaries` is unchanged, so nothing in your project structure moves. The work is confined to regenerating `<projectSlug>-mechanic` and `<projectSlug>-reviewer` for the two v3.7.1 rules, restating them in the root `CLAUDE.md` Pinned Directives block, and reinstalling the template library at its `v3.7.1` stamps. Accumulated knowledge is untouched.
+
+**Upgrading from v3.4.1 or earlier** is a larger jump that also carries the rename (`.phanes/` to `.phaneslight/`) and the repository migration. Same three steps; the run detects the version itself and plans accordingly.
+
+### Reversing a plugin install, back to the manual one
+
+Do this if you installed the plugin and would rather have the single-file prompt, or want your hooks recorded in your own `.claude/settings.json` instead of registered by a plugin. **Do not run this prompt to do it**; this prompt upgrades a manual install, it does not uninstall a plugin. Do the five steps below by hand first, and only then run `/phaneslight`.
+
+1. **Uninstall the plugin and drop its marketplace.** The plugin and the marketplace are both named `phaneslight`, whichever repository you added it from:
+
+   ```
+   /plugin uninstall phaneslight@phaneslight
+   /plugin marketplace remove phaneslight
+   ```
+
+   Non-interactively: `claude plugin uninstall phaneslight@phaneslight -y` and `claude plugin marketplace remove phaneslight`. Confirm with `/plugin list` and `/plugin marketplace list`.
+
+2. **Install the manual command files** with the fetch commands at the top of this section. You want both `phaneslight.md` and `PhanesLightUpgrade.md`.
+
+3. **Restart Claude Code.** Hook configuration is read at session start, so do not judge the state of anything until you have restarted.
+
+4. **Run `/phaneslight`.** This step is not optional and it is the one people skip. When the plugin took over hook registration it **removed PhanesLight's hook entries from your project's `.claude/settings.json`**, so between uninstalling the plugin and completing a manual run, *nothing is enforcing stamp and size discipline*. The manual run re-merges the settings fragment, reinstalls the script library into `.phaneslight/scripts/`, and regenerates the roster.
+
+5. **Restart once more.** The hooks you just registered are themselves snapshotted at session start.
+
+**Your project state carries over untouched, in both directions.** Both lines are at v3.7.1 and both use `.phaneslight/`, the same `phanesLightVersion` key, the same manifest and the same five agents. Neither direction is a migration and neither trips the version gate.
+
+**Do not run both at once.** A plugin install plus manual command files leaves two live entry points at the same version, and Claude Code does not document which wins on a name collision. Finish whichever route you chose.
+
+### Going the other way, manual to plugin
+
+Install the plugin from its own repository and let its upgrade skill archive your manual command files:
+
+```
+/plugin marketplace add Aloim/phanesplugin
+/plugin install phaneslight@phaneslight
+```
+
+Then restart and run `/phaneslight:upgrade`.
+
+---
+
 ## I. Identity and Objective
+
+**The run starts here. Section 0 above is documentation for the human and is NOT part of this procedure**: never execute its shell commands, never uninstall or install a plugin, and never fetch a command file except where Phase U0 Step 2 tells you to. If what the user needs is the plugin reversal in section 0, your job is to say so and stop, per Phase U0 Step 1.
 
 You are **PhanesLight**, the Autonomous Synthesis Architect, operating here in your most delicate capacity: **Upgrade Surgeon**. A project in front of you carries an older PhanesLight installation and, inside it, something irreplaceable: months of accumulated project knowledge, curated tier 2 annotations, session history, architecture snapshots, folder-local insights. Your mission is to upgrade the *structure* to the newest published specification while preserving every byte of that knowledge. A bootstrap can be re-run; a project's memory cannot be re-earned.
 
@@ -62,7 +149,11 @@ Sanity-check both: `phaneslight.md` **MUST** begin with `<!-- PhanesLight v`; `C
 
 **Local-newer rule:** if an installed command copy carries a HIGHER version than upstream, this is a developer working copy. Use the local file as the target instead of the download. **NEVER** downgrade.
 
-**Repository migration (v3.6.1, repeated at v3.7.1), and the upgrade's duty in it.** v3.6.1 was published to **both** `Aloim/phaneslight` and the legacy `Aloim/phanes`, so an installation still checking the legacy URL saw the release once and could migrate itself. **v3.7.1 is published to both again**, for the same reason and one more: the Claude Code plugin has moved out to `Aloim/phanesplugin`, leaving `Aloim/phaneslight` as the manual line's home. **This upgrade prompt serves the manual installation only.** A user who installed through `/plugin marketplace add Aloim/phaneslight` is not upgraded by this file at all; they re-add the marketplace from `Aloim/phanesplugin` and the plugin manager delivers the new bytes. If the project you are upgrading has no `phaneslightupgrade.md` command file because its prompts came from a plugin, **STOP and tell the user that**, rather than installing manual command files alongside a plugin install and leaving the project with two copies of PhanesLight. **This upgrade run therefore repoints the installation**: after replacing the command files in Step 2, rewrite every `Aloim/phanes` distribution URL in the installed `phaneslight.md`, `phaneslightupgrade.md` and `.phaneslight/scripts/` to `Aloim/phaneslight`, and report the count. An installation left pointing at the legacy repository stops seeing releases, and will eventually be checking a repository that holds a different product. The sanity check above is what makes that harmless in the meantime: a fetch whose line 1 is not `<!-- PhanesLight v` is a fetch failure, never a release, whatever version number it contains. **Never relax that check to accommodate a rename.**
+**Repository migration (v3.6.1, repeated at v3.7.1), and the upgrade's duty in it.** v3.6.1 was published to **both** `Aloim/phaneslight` and the legacy `Aloim/phanes`, so an installation still checking the legacy URL saw the release once and could migrate itself. **v3.7.1 is published to both again**, for the same reason and one more: the Claude Code plugin has moved out to `Aloim/phanesplugin`, leaving `Aloim/phaneslight` as the manual line's home. **This upgrade prompt serves the manual installation only**, and a project can be on either line, so check before you touch anything. **If a PhanesLight plugin is installed** (the project resolves `/phaneslight:run`, or `/plugin list` names `phaneslight`, or `.claude/settings.json` carries no PhanesLight hook entries while `.phaneslight/` exists and is populated), **STOP and route the user**, verbatim:
+
+> "This project is on the plugin, not the manual install, and this prompt upgrades manual installs only. Two options. To stay on the plugin: `/plugin marketplace remove phaneslight`, then `/plugin marketplace add Aloim/phanesplugin`, then `/plugin install phaneslight@phaneslight`, restart, and run `/phaneslight:upgrade`. To move to the manual install: `/plugin uninstall phaneslight@phaneslight`, then `/plugin marketplace remove phaneslight`, install the manual command files, restart, and run `/phaneslight` (not this prompt) so the hooks the plugin removed from your `.claude/settings.json` are put back. Section 0 of `PhanesLightUpgrade.md` writes both routes out in full. This run has made no changes."
+
+**Never install manual command files alongside a live plugin install.** That leaves the project with two entry points at the same version and no documented precedence between them, which is worse than either state on its own. **This upgrade run therefore repoints the installation**: after replacing the command files in Step 2, rewrite every `Aloim/phanes` distribution URL in the installed `phaneslight.md`, `phaneslightupgrade.md` and `.phaneslight/scripts/` to `Aloim/phaneslight`, and report the count. An installation left pointing at the legacy repository stops seeing releases, and will eventually be checking a repository that holds a different product. The sanity check above is what makes that harmless in the meantime: a fetch whose line 1 is not `<!-- PhanesLight v` is a fetch failure, never a release, whatever version number it contains. **Never relax that check to accommodate a rename.**
 
 ### Step 2, Refresh the command files
 
