@@ -1,10 +1,12 @@
-<!-- PhanesUpgrade v3.6.1, 2026-09-03. Redirect stub. Phanes is now PhanesLight, in a new repository.
+<!-- PhanesUpgrade v3.7.1, 2026-09-04. Redirect stub. Phanes is now PhanesLight, in a new repository.
      The upgrade prompt is PhanesLightUpgrade.md at github.com/Aloim/phaneslight. -->
 # PhanesUpgrade is now PhanesLightUpgrade, at a new repository
 
 **This file is a redirect, not an upgrade procedure.** Do not execute anything below as an upgrade run.
 
-PhanesLight moved to **`Aloim/phaneslight`** at v3.6.1. This repository is being handed to a separate, more sophisticated Phanes project. v3.6.1 is published to both so that existing installations can find it and migrate themselves.
+PhanesLight moved to **`Aloim/phaneslight`** at v3.6.1. This repository is being handed to a separate, more sophisticated Phanes project. v3.7.1 is published to both, as v3.6.1 was, so that existing installations can find it and migrate themselves.
+
+**At v3.7.1 the manual prompt and the Claude Code plugin became separate products.** This file, and the upgrade it points at, serve the **manual** installation. A plugin installation is upgraded by its plugin manager instead, from the marketplace at `Aloim/phanesplugin`.
 
 ## If you are an agent that just fetched this file
 

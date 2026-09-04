@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 batch-apply
+# phaneslight-template v3.7.1 batch-apply
 # Applies a batch of {file, old, new} exact-match edits and prints a per-edit review diff
 # computed against saved pre-images. Git is NOT a dependency: the undo substrate is a
 # byte-for-byte pre-image of every file touched, saved before the first write, so this

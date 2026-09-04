@@ -1,5 +1,5 @@
 <!-- DOC | The verbatim tests/README.md body `phaneslight scaffold` writes when a project has no test tree README; phaneslight.md Phase 2.5 Step 1b is the authoritative wording. -->
-<!-- phaneslight-template v3.6.1 readme-tests -->
+<!-- phaneslight-template v3.7.1 readme-tests -->
 <!-- Verbatim tests/README.md body (phaneslight.md Phase 2.5 Step 1b), consumed by
      `phaneslight scaffold`; written only when tests/README.md is absent. -->
 <!-- SECTION tests-readme -->

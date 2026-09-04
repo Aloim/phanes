@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 preflight
+# phaneslight-template v3.7.1 preflight
 # Phase 0 mechanical pre-flights, observed and reported, NEVER acted on: run-type marker,
 # installed version, upstream stamp (network-tolerant, 10s timeout, single attempt), the four
 # standard MCP servers via `claude mcp list`, platform, capability-census counts, and the

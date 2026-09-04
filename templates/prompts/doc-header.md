@@ -1,5 +1,5 @@
 <!-- DOC | The canonical doc-discipline header block every documentation file carries, fetched so sessions and generated scripts quote one tested source; phaneslight.md Phase 2.5 Step 2b is the authoritative wording. -->
-<!-- phaneslight-template v3.6.1 doc-header -->
+<!-- phaneslight-template v3.7.1 doc-header -->
 <!-- The canonical doc-discipline header block (phaneslight.md Phase 2.5 Step 2b), fetched so the
      session and fallback-generated scripts quote one tested source instead of re-deriving it.
      `phaneslight scaffold` verifies its presence; the block is instantiated by whoever authors a

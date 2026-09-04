@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 ledger
+# phaneslight-template v3.7.1 ledger
 # Run-progress ledger mechanics (Phase 0 Compaction Survival made mechanical). Subcommands:
 #   ledger append "<line>"  appends one caller-composed line (the caller owns the format;
 #                           this script only writes; an argument containing CR or LF is

@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 phaneslight
+# phaneslight-template v3.7.1 phaneslight
 # Dispatcher. Routes `phaneslight <subcommand> [args]` to the sibling script in this directory.
 # Resolves siblings by this script's own location, so it works from any working directory.
 $ErrorActionPreference = 'Stop'

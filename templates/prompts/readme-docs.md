@@ -1,5 +1,5 @@
 <!-- DOC | The verbatim README bodies `phaneslight scaffold` writes into the documentation tree (session summaries, architecture, registry); phaneslight.md Phase 2.5 Step 2 is the authoritative wording. -->
-<!-- phaneslight-template v3.6.1 readme-docs -->
+<!-- phaneslight-template v3.7.1 readme-docs -->
 <!-- Verbatim README bodies for the documentation tree (phaneslight.md Phase 2.5 Step 2), consumed
      by `phaneslight scaffold`: each SECTION block is written verbatim (LF-normalized) to its target file when,
      and only when, that file is absent. Merge-never-overwrite: an existing file is never

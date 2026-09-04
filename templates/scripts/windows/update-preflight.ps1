@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 update-preflight
+# phaneslight-template v3.7.1 update-preflight
 # The update-run fast-path aggregator: runs the sensors (census-diff, hook table, register
 # breach state, manifest sha256 drift, module-list vs config, optional spec-version compare)
 # and the git delta, and emits ONE JSON verdict {sensors, quiet, gitDelta}. quiet is true only

@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 hook-ledger-status
+# phaneslight-template v3.7.1 hook-ledger-status
 # SessionStart hook. Prints NOTHING when the run-progress ledger is closed or absent; prints
 # exactly one line when a prior run died mid-flight, so the session opens knowing it must ask
 # the user: resume, or start fresh (ledger reset). The ASKING stays in the session; this hook

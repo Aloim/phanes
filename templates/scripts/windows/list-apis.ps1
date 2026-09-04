@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 list-apis
+# phaneslight-template v3.7.1 list-apis
 # Prints the API baseline entries for one module to stdout.
 # Reads the machine baseline at .phaneslight/registry/<module>.json (produced by regen-registry).
 # Sub-agents call this as a tool; they do not load the whole baseline into context.

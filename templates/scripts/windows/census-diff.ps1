@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 census-diff
+# phaneslight-template v3.7.1 census-diff
 # Re-enumerates the disk-visible capability surfaces (MCP servers via `claude mcp list`,
 # plugins, skills, commands) and diffs them against capabilities.selection[] recorded in
 # .phaneslight/config.json, mechanizing the update-run "diff, don't re-ask" duty. Prints a digest

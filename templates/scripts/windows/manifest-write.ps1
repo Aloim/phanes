@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 manifest-write
+# phaneslight-template v3.7.1 manifest-write
 # Recomputes sha256 provenance for every installed script (.phaneslight/scripts/) and prompt
 # template (.claude/template/) and rewrites .phaneslight/manifest.json (schema: phaneslight.md Phase 5).
 # Blessing the CURRENT disk state is this script's one job: drift detection against the

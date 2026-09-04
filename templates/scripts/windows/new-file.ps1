@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 new-file
+# phaneslight-template v3.7.1 new-file
 # Creates a file with the required header stamp. The only sanctioned way to create files.
 # Usage: phaneslight new-file <module> <path> "<description of at least five words>"
 # <module> may be a source module, tests, or docs. Header selection is by DESTINATION, not by the

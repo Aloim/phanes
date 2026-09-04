@@ -1,8 +1,20 @@
 # PhanesLight
 
-> ## ⚠️ v3.6.1 — Renaming, Repository Migration, and a Workflow Update
+> ## ⚠️ v3.7.1 — The manual line returns, and two rules change
 >
-> **This is a major release. It renames the project, moves the repository, and changes how runs handle their own durability. Existing installs must upgrade.**
+> **This repository is now the home of the MANUAL PhanesLight.** The Claude Code plugin has moved to [`github.com/Aloim/phanesplugin`](https://github.com/Aloim/phanesplugin). If you install through `/plugin marketplace add`, go there; nothing on this page applies to you.
+>
+> **The manual install path is maintained again.** It was retired at v3.6.2 in favour of the plugin. That retirement is reversed: `phaneslight.md` is published here, and there is no manual v3.7.0 because v3.7.0 shipped only as a plugin. An install still on the manual path upgrades v3.6.1 straight to v3.7.1.
+>
+> **Two rules changed in the lineup.** The haiku tier, `<slug>-mechanic`, no longer writes code of any kind, and escalates from LOW upward because it can no longer absorb even a trivial fix itself. And `<slug>-reviewer` now reviews your plan before the run starts, and may write plan files; the old flat claim that it "never writes" was always contradicted by its own job and is corrected to "never writes code".
+>
+> **v3.7.1 is published to BOTH `Aloim/phaneslight` and the legacy `Aloim/phanes`,** as v3.6.1 was, so an install still checking the old URL sees it once and repoints itself.
+>
+> **What to do:** run `/phaneslightupgrade`. **Restart your session afterwards**; hooks are snapshotted at session start. Full accounting in [`Changelog.md`](Changelog.md).
+>
+> <details><summary>The v3.6.1 notice, kept for installs upgrading from v3.4.1 or earlier</summary>
+>
+> **v3.6.1 was a major release. It renames the project, moves the repository, and changes how runs handle their own durability.**
 >
 > **The project is now PhanesLight.** `phanes.md` → `phaneslight.md`, `/phanes` → `/phaneslight`, `/phanesupgrade` → `/phaneslightupgrade`, and project state moved from `.phanes/` to `.phaneslight/`.
 >
@@ -10,15 +22,17 @@
 >
 > **Why both:** a **more sophisticated Phanes project** is coming, and it will inherit the `Aloim/phanes` repository and the Phanes name. PhanesLight is not becoming that tool. It is a bootstrap prompt, it is staying one, and it is getting out of the way of the larger project rather than being absorbed into it. The two will ship side by side.
 >
-> **v3.6.1 is published to BOTH repositories,** deliberately and once. Installations that still check the old URL will see this release, offer you the upgrade, and repoint themselves at the new repository as part of it. **Every later version ships to `Aloim/phaneslight` only.** If you skip this upgrade, your install stops seeing releases and will eventually be checking a repository that holds a different product.
+> **v3.6.1 is published to BOTH repositories,** deliberately and once. Installations that still check the old URL will see this release, offer you the upgrade, and repoint themselves at the new repository as part of it. **Later versions ship to `Aloim/phaneslight`**, and v3.7.1 was published to both again for the same reason. If you skip this upgrade, your install stops seeing releases and will eventually be checking a repository that holds a different product.
 >
-> **Also shipping as a plugin in the Anthropic Marketplace** *(link to follow)*.
+> **The plugin now lives at [`Aloim/phanesplugin`](https://github.com/Aloim/phanesplugin)**: `/plugin marketplace add Aloim/phanesplugin`, then `/plugin install phaneslight@phaneslight`.
 >
 > **Prefer the old workflow? It is kept whole.** v3.6.0 replaced the review chain with an escalation ladder, which is a real change in how work gets verified, so [`older version/v3.4.1/`](older%20version/v3.4.1/) now holds the **complete** last pre-ladder distribution — prompt, upgrade prompt, README, changelog and full template library — rather than a bare prompt file. Every earlier version has been removed from that folder. Read both and pick; the choice is yours, not ours.
 >
 > **What to do:** run `/phaneslightupgrade`. It performs the version upgrade, the name migration and the repository migration in one pass, on a branch you review and merge yourself. See [Upgrading an older install](#upgrading-an-older-install). **Restart your session afterwards**; hooks are snapshotted at session start.
 >
-> Beyond the migration, v3.6.1 fixes thirteen defects found in production use. The headline ones: sub-agent returns are now persisted to disk before the next dispatch, so a context ceiling or an API crash is a bookmark rather than a data-loss event; a pinned model that runs out of quota degrades down a documented ladder instead of halting the tier; and owner-authorized deviations from a generated directive survive regeneration in a new `pinned:project` block. Full accounting in [`Changelog.md`](Changelog.md).
+> </details>
+>
+> Beyond the migration, v3.6.1 fixed thirteen defects found in production use. The headline ones: sub-agent returns are now persisted to disk before the next dispatch, so a context ceiling or an API crash is a bookmark rather than a data-loss event; a pinned model that runs out of quota degrades down a documented ladder instead of halting the tier; and owner-authorized deviations from a generated directive survive regeneration in a new `pinned:project` block. Full accounting in [`Changelog.md`](Changelog.md).
 
 ---
 
@@ -69,9 +83,9 @@ These are enhancements, not dependencies: a failed install becomes a TODO and th
 | Agent | Model | What it is for |
 | --- | --- | --- |
 | `<slug>-orchestrator` | Opus 5 | Authors, applies and dispatches. Main executor as well as orchestrator. |
-| `<slug>-reviewer` | Fable 5.1 | HIGH and CRIT findings only. Writes a fix plan and hands it back; never applies. |
+| `<slug>-reviewer` | Fable 5.1 | HIGH and CRIT findings, **and the plan review at every planned launch (v3.7.1)**. Writes a fix plan and hands it back; never applies. Writes **plan files and review artifacts** and names every one; never code. |
 | `<slug>-worker` | Sonnet 5 | The default working tier for authored code, within a dispatched scope, disclosing every edit. |
-| `<slug>-mechanic` | Haiku 4.5 | Mechanical transforms, indexing, archive condensation, fetch-and-digest retrieval. Never authored logic. |
+| `<slug>-mechanic` | Haiku 4.5 | Mechanical **non-code** transforms, doc indexing, archive condensation, fetch-and-digest retrieval. **Never writes code of any kind (v3.7.1)**, and escalates from LOW upward because it cannot fix anything itself. |
 | `<slug>-closure` | Sonnet 5 | Independent re-derivation at every close. Writes no code; its output is a flag, never a fix. |
 
 The expensive tier is affordable because it is rare: worker and mechanic escalate to whoever spawned them, the orchestrator handles MED itself, and only an undeferred HIGH or CRIT reaches Fable. **(v3.6.1)** A pinned model that is unreachable is retried with backoff, then substituted down a documented ladder with the substitution recorded, rather than halting its tier.
@@ -117,8 +131,8 @@ this shape rather than an open mesh.
  │ its own  │  │ retrieval │  │ back        │  │ re-runs the build  │
  │ scope    │  │           │  │             │  │ and tests itself   │
  ├──────────┤  ├───────────┤  ├─────────────┤  ├────────────────────┤
- │ writes   │  │ writes    │  │ writes      │  │ writes no code,    │
- │ in scope │  │ in scope  │  │ NOTHING     │  │ ever               │
+ │ writes   │  │ writes NO │  │ writes      │  │ writes no code,    │
+ │ in scope │  │ code, ever│  │ PLANS only  │  │ ever               │
  ╰────┬─────╯  ╰─────┬─────╯  ╰──────┬───┬──╯  ╰─────────┬──────────╯
       │              │               │   │               │
       │              │               │   ╰── may spawn -worker and -mechanic
@@ -154,8 +168,10 @@ create work anywhere:
    LOW   ·  INFO           ──►  create none, ever. They stay in the report,
                                 are never rehomed, never become follow-ups.
 
-   -worker / -mechanic finds something MED or above
-        │
+   -worker finds something MED or above
+   -mechanic finds something LOW or above  (v3.7.1: it may not write
+        │                                   code, so it cannot absorb
+        │                                   even a trivial fix itself)
         │   stops immediately. Does NOT attempt the fix.
         ▼
    its own spawner
@@ -171,7 +187,7 @@ create work anywhere:
    │ one-line justification.  │   │                │                 │
    │ Travels in the handover  │   │                ▼                 │
    │ until resolved or        │   │ -orchestrator applies it. The    │
-   │ explicitly closed. A     │   │ reviewer never touches the repo. │
+   │ explicitly closed. A     │   │ reviewer never touches source.   │
    │ deferred CRIT is named   │   ╰──────────────────────────────────╯
    │ in the handover's first  │
    │ line.                    │        MED never reaches the reviewer.
@@ -248,7 +264,7 @@ Think of it as refreshing Claude's knowledge of your project. **Launch update ru
 - **Model degradation is documented (v3.6.1).** "Fixed by role" governs the *choice*, not the *availability*. An unreachable pinned model is retried with backoff, then substituted down a per-role ladder, recorded in three places. The reviewer's ladder goes **up** (Fable → Opus): review is load-bearing and the wrong axis to economize on.
 - **Verification is load-bearing, not polish (v3.6.1).** Worker dispositions are repeatedly overturned on review, and so occasionally is the orchestrator's own HIGH finding. That is the design working. Budget the review pass into the plan rather than the slack; worker output is not shippable as-received, and a pass that finds nothing is a successful pass, never grounds for skipping the next.
 - **Single writer per artifact.** Every registry file, snapshot, summary and generated `_index.md` has exactly one writing agent. Many readers, one writer.
-- **Write rights follow the lineup, and every edit is disclosed.** The orchestrator writes unrestricted; workers and mechanics only inside a dispatched scope, naming every edit; the reviewer never writes; closure never writes code. An undisclosed edit is reported as drift.
+- **Write rights follow the lineup, and every edit is disclosed.** The orchestrator writes unrestricted; the worker only inside a dispatched scope, naming every edit; **the mechanic the same, but never code (v3.7.1)**; **the reviewer never writes code, and does write plan files and review artifacts, naming every one (v3.7.1)**; closure never writes code. An undisclosed edit is reported as drift.
 - **No UI approval by prose.** A proposal declares its viewports and reference designs up front; after apply, closure captures and runs an explicit pass/fail checklist. "Looks good" is not evidence. Missing capture tooling is diagnosed, remembered, and marked visually unverified rather than passed silently.
 - **Context injection over inheritance.** A sub-agent receives only the slice its tier allows and pulls bulky material through a mechanic digest. **(v3.6.1)** That digest is *unverified* material, not a source: any fact from one heading into a durable document is re-derived first, and counting tasks in particular are a false economy at that tier.
 - **Bounded fan-out.** No more than 5 sub-agents at once, whatever the harness allows. A wider sweep is recommended to you, never quietly self-multiplied. Every session summary records the fan-out ledger.
@@ -417,7 +433,9 @@ PhanesLight never installs these. The census discovers them only if you installe
 
 ## Version
 
-**Current: v3.6.1** (2026-09-03) — renaming, repository migration, and a workflow update. See the [notice at the top](#️-v361--renaming-repository-migration-and-a-workflow-update) for the migration; the rest of the release fixes thirteen defects found in production use, across tooling, orchestration, bootstrap quality and cheap-tier calibration.
+**Current: v3.7.1** (2026-09-04) — the manual line returns to this repository, the plugin moves to `Aloim/phanesplugin`, and two lineup rules change: the haiku tier writes no code and escalates from LOW, and the reviewer reviews the launch plan and may write plan files. See [`Changelog.md`](Changelog.md).
+
+**Previous: v3.6.1** (2026-09-03) — renaming, repository migration, and a workflow update. See the [notice at the top](#️-v361--renaming-repository-migration-and-a-workflow-update) for the migration; the rest of the release fixes thirteen defects found in production use, across tooling, orchestration, bootstrap quality and cheap-tier calibration.
 
 **Tooling:** `new-file` selects its header by *destination* rather than by a magic module name, so a Markdown file under `documentation/` gets the DOC discipline header whatever module was named, and says so rather than promoting silently. `doc-index` orders by filename instead of modification time, so the index can answer "which is the latest" and editing an old document stops reordering the whole file. `register-check` renames its completed-entry finding to `COMPLETED-NOT-ARCHIVED` and explains itself, resolving a contradiction where the register legend advertised a marker whose use the checker reported as a finding. `loc-check` always terminates with a count line, so a truncated tail carries the number. Closure's write surface is documented exhaustively, since "output is a flag, never a fix" is a claim about judgment, not about the file system.
 

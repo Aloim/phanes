@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 repo-manifest
+# phaneslight-template v3.7.1 repo-manifest
 # Generates the deterministic raw file list (.phaneslight/inventory/raw-files.txt, from
 # git ls-files, docRoot/.phaneslight/.claude trees and binary extensions excluded) and diffs
 # it against the Claude-maintained annotated summary list (annotated-files.json, shape

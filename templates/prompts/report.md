@@ -1,5 +1,5 @@
 <!-- DOC | The blank report template every sub-agent copies for its report; role-conditional instruction blocks for the closure agent ride inside as comments. -->
-<!-- phaneslight-template v3.6.1 report -->
+<!-- phaneslight-template v3.7.1 report -->
 # Report: [Brief Title of Your Task]
 
 ## Assignment Details (Injected Context)

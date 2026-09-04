@@ -1,4 +1,4 @@
-# phaneslight-template v3.6.1 scaffold
+# phaneslight-template v3.7.1 scaffold
 # Mechanizes Phase 2.5 Steps 1, 1b, and 2: creates the documentation tree (under the
 # configured docRoot), the tests tree, and the four verbatim README files, reading the README
 # bodies from the installed prompt templates (.claude/template/readme-docs.md and

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// phaneslight-template v3.6.1 cli
+// phaneslight-template v3.7.1 cli
 // Cross-shell entry point: `node .phaneslight/scripts/cli.js <subcommand> [args]` resolves identically
 // in PowerShell, cmd, and Git Bash, so agents never depend on PATH or a shell-specific launcher.
 // It forwards to the platform dispatcher sibling (phaneslight.ps1 on Windows, the POSIX `phaneslight`

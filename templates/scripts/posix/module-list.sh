@@ -1,5 +1,5 @@
 #!/bin/sh
-# phaneslight-template v3.6.1 module-list
+# phaneslight-template v3.7.1 module-list
 # Prints the configured module list, one per line, read from .phaneslight/config.json.
 # With --all, additionally prints the two pseudo-modules `new-file` accepts (tests, docs), which
 # the config never carries. Default output is UNCHANGED and stays exactly the configured list:
