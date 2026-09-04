@@ -26,7 +26,7 @@ All notable changes to **PhanesLight**. The authoritative version marker is the 
 
 **Two changes to who may write what, and one repository split. The haiku tier stops writing code entirely, the reviewer picks up planning as its first duty and is allowed to write plan files, and the Claude Code plugin moves out to its own repository so that `Aloim/phaneslight` can be the manual line's home.**
 
-> **There is no manual v3.7.0.** v3.7.0 was the plugin release and it shipped only as a plugin, retiring the manual path. That retirement is reversed here: the manual prompt is maintained again, at `Aloim/phaneslight`, and the plugin continues separately at `Aloim/phanesplugin`. An install that never left the manual path upgrades v3.6.1 straight to v3.7.1 and skips nothing that applies to it.
+> **There is no manual v3.7.0.** v3.7.0 was the plugin release and it shipped only as a plugin, retiring the manual path. That retirement is reversed here: the manual prompt is maintained again, at `Aloim/phaneslight`, and the plugin continues separately at `Aloim/phaneslightplugin`. An install that never left the manual path upgrades v3.6.1 straight to v3.7.1 and skips nothing that applies to it.
 
 ### 1. The haiku tier never writes code
 
@@ -50,10 +50,10 @@ The worker is untouched. It still writes code within its dispatched scope and st
 
 ### 3. The plugin and the manual prompt are separate products now
 
-`Aloim/phaneslight` holds the manual prompt. The Claude Code plugin, its marketplace and its skills have moved to **`Aloim/phanesplugin`**, and plugin users re-add the marketplace there:
+`Aloim/phaneslight` holds the manual prompt. The Claude Code plugin, its marketplace and its skills have moved to **`Aloim/phaneslightplugin`**, and plugin users re-add the marketplace there:
 
 ```
-/plugin marketplace add Aloim/phanesplugin
+/plugin marketplace add Aloim/phaneslightplugin
 /plugin install phaneslight@phaneslight
 ```
 

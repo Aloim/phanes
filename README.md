@@ -5,7 +5,7 @@
 > | What you want | Where it is |
 > | --- | --- |
 > | **The manual, single-file prompt** (`phaneslight.md`, fetched into `.claude/commands/`) | **[`Aloim/phaneslight`](https://github.com/Aloim/phaneslight)** |
-> | **The Claude Code plugin** (`/plugin marketplace add`) | **[`Aloim/phanesplugin`](https://github.com/Aloim/phanesplugin)** |
+> | **The Claude Code plugin** (`/plugin marketplace add`) | **[`Aloim/phaneslightplugin`](https://github.com/Aloim/phaneslightplugin)** |
 >
 > **This repository is being handed to a different and larger project, which inherits the Phanes name.** PhanesLight is a bootstrap prompt, it is staying one, and it moved aside rather than being absorbed. Do not expect what is here to keep describing PhanesLight indefinitely.
 

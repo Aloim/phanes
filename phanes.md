@@ -13,7 +13,7 @@ Two things changed, and they are separate:
 
 **v3.7.1 is published to both repositories**, as v3.6.1 was, so that installations still checking this URL can see the release and upgrade themselves onto the new one. That is the only reason this file is here.
 
-**One further split, at v3.7.1.** The manual prompt and the Claude Code plugin are now separate products at separate repositories. The manual prompt is `phaneslight.md` at `Aloim/phaneslight`, which is what an installation reading this stub wants. The plugin has its own marketplace at `Aloim/phanesplugin` and is installed with `/plugin marketplace add Aloim/phanesplugin`; nothing on this page applies to a plugin installation.
+**One further split, at v3.7.1.** The manual prompt and the Claude Code plugin are now separate products at separate repositories. The manual prompt is `phaneslight.md` at `Aloim/phaneslight`, which is what an installation reading this stub wants. The plugin has its own marketplace at `Aloim/phaneslightplugin` and is installed with `/plugin marketplace add Aloim/phaneslightplugin`; nothing on this page applies to a plugin installation.
 
 | what you were looking for | where it is now |
 | --- | --- |

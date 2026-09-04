@@ -6,7 +6,7 @@
 
 PhanesLight moved to **`Aloim/phaneslight`** at v3.6.1. This repository is being handed to a separate, more sophisticated Phanes project. v3.7.1 is published to both, as v3.6.1 was, so that existing installations can find it and migrate themselves.
 
-**At v3.7.1 the manual prompt and the Claude Code plugin became separate products.** This file, and the upgrade it points at, serve the **manual** installation. A plugin installation is upgraded by its plugin manager instead, from the marketplace at `Aloim/phanesplugin`.
+**At v3.7.1 the manual prompt and the Claude Code plugin became separate products.** This file, and the upgrade it points at, serve the **manual** installation. A plugin installation is upgraded by its plugin manager instead, from the marketplace at `Aloim/phaneslightplugin`.
 
 ## If you are an agent that just fetched this file
 
