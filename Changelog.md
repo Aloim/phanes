@@ -1,3 +1,19 @@
+# 🚨 THIS REPOSITORY HAS MOVED TO PhanesLight 🚨
+
+> # ➡️ [`github.com/Aloim/phaneslight`](https://github.com/Aloim/phaneslight)
+>
+> ## This repository has been renamed and moved.
+>
+> ## It is being kept clear in preparation for the release of a **larger orchestrator, which will carry on the name Phanes.**
+>
+> ## **PhanesLight is not going anywhere.** It stays exactly what it is, the lightweight, single-shot orchestrator, in its own repository at **[`Aloim/phaneslight`](https://github.com/Aloim/phaneslight)**.
+>
+> ## ⚠️ **What you see here will remain only until that new release**, as a reminder to move across.
+>
+> # 👉 If you want to keep access to PhanesLight, go to [`Aloim/phaneslight`](https://github.com/Aloim/phaneslight).
+
+---
+
 # Changelog
 
 All notable changes to **PhanesLight**. The authoritative version marker is the stamp on the first line of `phaneslight.md`. Diff it against this repository before assuming your installed copy is current.
